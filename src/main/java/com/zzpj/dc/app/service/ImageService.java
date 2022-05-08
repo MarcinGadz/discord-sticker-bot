@@ -9,10 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 public class ImageService {
+    private final Byte[] PNG_SIGNATURE = new Byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 
     public void addImage(MultipartFile image, String owner) throws IOException {
         Image img = new Image(image.getOriginalFilename(), primitiveToObjects(image.getBytes()), owner);
@@ -42,14 +42,11 @@ public class ImageService {
      * @return boolean telling if specified file is PNG
      */
     private boolean isPNG(Image image) {
-        List<Byte> pngSignature = Stream.of(137, 80, 78, 71, 13, 10, 26, 10)
-                .map(Integer::byteValue).toList();
-
-        if (image.getContent().length < pngSignature.size()) {
+        if (image.getContent().length < PNG_SIGNATURE.length) {
             return false;
         }
-        for (int i = 0; i < 8; i++) {
-            if (! image.getContent()[i].equals(pngSignature.get(i))) {
+        for (int i = 0; i < PNG_SIGNATURE.length; i++) {
+            if (! image.getContent()[i].equals(PNG_SIGNATURE[i])) {
                 return false;
             }
         }
