@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Component(value = "ImageInMemoryDAO")
 public class ImageInMemoryDAO implements ImageDAO{
     private List<Image> images = new ArrayList<>();
     @Override

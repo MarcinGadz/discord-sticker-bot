@@ -5,14 +5,14 @@ import java.util.Objects;
 
 public final class Image {
     private String name;
-    private Byte[] content;
+    private byte[] content;
     private String owner;
     private Long saveDate;
 
     public Image() {
     }
 
-    public Image(String name, Byte[] content, String owner, Long saveDate) {
+    public Image(String name, byte[] content, String owner, Long saveDate) {
         this.name = name;
         this.content = content;
         this.owner = owner;
@@ -35,11 +35,11 @@ public final class Image {
         this.name = name;
     }
 
-    public Byte[] getContent() {
+    public byte[] getContent() {
         return content;
     }
 
-    public void setContent(Byte[] content) {
+    public void setContent(byte[] content) {
         this.content = content;
     }
 

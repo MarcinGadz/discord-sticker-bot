@@ -1,10 +1,12 @@
 package com.zzpj.dc.app.service;
 
+import com.zzpj.dc.app.dao.ImageS3DAO;
 import com.zzpj.dc.app.dao.ImageDAO;
 import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import com.zzpj.dc.app.model.Image;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,21 +21,20 @@ public class ImageService {
 
     private ImageDAO imageDAO;
 
-    @Autowired
-    public void setImageDAO(ImageDAO imageDAO) {
+    @Autowired()
+    public void setImageDAO(@Qualifier("ImageS3DAO") ImageDAO imageDAO) {
         this.imageDAO = imageDAO;
     }
 
     public void addImage(MultipartFile image, String owner) throws IOException {
         Long currentTime = System.currentTimeMillis();
-        Image img = new Image(image.getOriginalFilename(), primitiveToObjects(image.getBytes()), owner, currentTime);
+        Image img = new Image(image.getOriginalFilename(), image.getBytes(), owner, currentTime);
         if(!checkOwnerHourLimits(owner, currentTime)) {
             throw new UserLimitExceededException();
         }
         if (!isPNG(img)) {
             throw new WrongFileTypeException();
         }
-        // TODO persist
         imageDAO.addImage(img);
     }
 
@@ -48,7 +49,7 @@ public class ImageService {
         return getForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
-                .toList().size() >= USER_HOURLY_ADD_LIMIT;
+                .toList().size() <= USER_HOURLY_ADD_LIMIT;
     }
 
     public Image getImageByName(String name, String userId) {
@@ -73,18 +74,10 @@ public class ImageService {
             return false;
         }
         for (int i = 0; i < PNG_SIGNATURE.length; i++) {
-            if (! image.getContent()[i].equals(PNG_SIGNATURE[i])) {
+            if (image.getContent()[i] != PNG_SIGNATURE[i]) {
                 return false;
             }
         }
         return true;
-    }
-
-    private Byte[] primitiveToObjects(byte[] arr) {
-        Byte[] tmp = new Byte[arr.length];
-        for (int i = 0; i < arr.length; i++) {
-            tmp[i] = arr[i];
-        }
-        return tmp;
     }
 }
