@@ -11,10 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+
 /**
  * REST Controller used to manipulate images
  */
-@RestController("/image")
+@RestController
+@RequestMapping("/image")
 public class ImageController {
 
     private final ImageService imageService;
@@ -27,14 +29,13 @@ public class ImageController {
     /**
      * Method used to add images to backend
      *
-     * @param image Image to be added
+     * @param image Image to be added (must be valid PNG file with max size of 1MiB)
      * @param owner ID of user who is adding image
      */
-    @PostMapping(
-            value = "/{userId}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public void addImage(@RequestBody @NonNull MultipartFile image,
-                         @PathVariable("userId") String owner) {
+    @PostMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void addImage(
+            @PathVariable("userId") @NonNull String owner,
+            @RequestBody @NonNull MultipartFile image) {
         try {
             imageService.addImage(image, owner);
         } catch (IOException e) {
@@ -43,8 +44,9 @@ public class ImageController {
     }
 
     @GetMapping("/{userId}/{name}")
-    public Image getPhoto(@PathVariable("name") String photoName,
-                          @PathVariable("userId") String userId) {
+    public Image getPhoto(
+            @PathVariable("name") @NonNull String photoName,
+            @PathVariable("userId") @NonNull String userId) {
         return imageService.getImageByName(photoName, userId);
     }
 

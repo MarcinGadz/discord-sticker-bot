@@ -1,8 +1,7 @@
 package com.zzpj.dc.app.dao;
 
-import com.zzpj.dc.app.model.Owner;
-import org.springframework.stereotype.Component;
+import com.zzpj.dc.app.model.User;
 
 public interface UserDAO {
-    Owner getUser(String userId);
+    User getUser(String userId);
 }
