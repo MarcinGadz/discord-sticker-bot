@@ -7,14 +7,24 @@ public final class Image {
     private String name;
     private Byte[] content;
     private String owner;
+    private Long saveDate;
 
     public Image() {
     }
 
-    public Image(String name, Byte[] content, String owner) {
+    public Image(String name, Byte[] content, String owner, Long saveDate) {
         this.name = name;
         this.content = content;
         this.owner = owner;
+        this.saveDate = saveDate;
+    }
+
+    public Long getSaveDate() {
+        return saveDate;
+    }
+
+    public void setSaveDate(Long saveDate) {
+        this.saveDate = saveDate;
     }
 
     public String getName() {
