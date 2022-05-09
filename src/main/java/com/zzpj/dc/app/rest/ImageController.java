@@ -5,6 +5,7 @@ import com.zzpj.dc.app.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,7 +33,8 @@ public class ImageController {
     @PostMapping(
             value = "/{userId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public void addImage(@RequestBody MultipartFile image, @PathVariable("userId") String owner) {
+    public void addImage(@RequestBody @NonNull MultipartFile image,
+                         @PathVariable("userId") String owner) {
         try {
             imageService.addImage(image, owner);
         } catch (IOException e) {

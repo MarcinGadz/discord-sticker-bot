@@ -15,19 +15,13 @@ import java.util.List;
 public class ImageService {
     private static final Byte[] PNG_SIGNATURE = new Byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     private static final Long USER_HOURLY_ADD_LIMIT = 20L;
-    private static final Long HOUR_MILIS = 3600000L;
+    private static final Long HOUR_MILLIS = 3600000L;
 
-    private UserService userService;
     private ImageDAO imageDAO;
 
     @Autowired
     public void setImageDAO(ImageDAO imageDAO) {
         this.imageDAO = imageDAO;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
     }
 
     public void addImage(MultipartFile image, String owner) throws IOException {
@@ -50,9 +44,8 @@ public class ImageService {
      * @return boolean specifying if user can add more images now
      */
     private boolean checkOwnerHourLimits(String owner, Long time) {
-        Long limitWindowStart = time - HOUR_MILIS;
-        return userService.getOwnerByName(owner)
-                .getOwnImages()
+        Long limitWindowStart = time - HOUR_MILLIS;
+        return getForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
                 .toList().size() >= USER_HOURLY_ADD_LIMIT;
