@@ -1,5 +1,6 @@
 package com.zzpj.dc.app.service;
 
+import com.zzpj.dc.app.dao.ImageDAO;
 import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import com.zzpj.dc.app.model.Image;
@@ -8,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,6 +18,12 @@ public class ImageService {
     private static final Long HOUR_MILIS = 3600000L;
 
     private UserService userService;
+    private ImageDAO imageDAO;
+
+    @Autowired
+    public void setImageDAO(ImageDAO imageDAO) {
+        this.imageDAO = imageDAO;
+    }
 
     @Autowired
     public void setUserService(UserService userService) {
@@ -34,7 +40,7 @@ public class ImageService {
             throw new WrongFileTypeException();
         }
         // TODO persist
-
+        imageDAO.addImage(img);
     }
 
     /**
@@ -54,12 +60,12 @@ public class ImageService {
 
     public Image getImageByName(String name, String userId) {
         //TODO
-        return new Image();
+        return imageDAO.getImageByName(name, userId);
     }
 
     public List<Image> getForOwner(String owner) {
         //TODO
-        return new ArrayList<>();
+        return imageDAO.getImagesForOwner(owner);
     }
 
     /**
