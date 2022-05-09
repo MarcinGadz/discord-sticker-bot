@@ -1,7 +1,7 @@
 package com.zzpj.dc.app.service;
 
 import com.zzpj.dc.app.dao.UserDAO;
-import com.zzpj.dc.app.model.Owner;
+import com.zzpj.dc.app.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ public class UserService {
         this.userDAO = userDAO;
     }
 
-    public Owner getOwnerByName(String name) {
+    public User getOwnerByName(String name) {
         return userDAO.getUser(name);
     }
 }

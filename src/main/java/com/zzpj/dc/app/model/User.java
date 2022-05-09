@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class Owner {
+public class User {
     private String id;
     private List<Image> lastUsed = new LinkedList<>();
     private List<Image> ownImages = new LinkedList<>();
