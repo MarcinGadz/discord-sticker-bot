@@ -1,5 +1,6 @@
 package com.zzpj.dc.app.rest;
 
+import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+
+import java.util.List;
 
 /**
  * REST Controller used to manipulate images
@@ -35,10 +38,11 @@ public class ImageController {
     @PostMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void addImage(
             @PathVariable("userId") @NonNull String owner,
-            @RequestBody @NonNull MultipartFile image) {
+            @RequestBody @NonNull MultipartFile image
+    ) {
         try {
             imageService.addImage(image, owner);
-        } catch (IOException e) {
+        } catch (IOException | ImageContentEmptyException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
@@ -46,8 +50,15 @@ public class ImageController {
     @GetMapping("/{userId}/{name}")
     public Image getPhoto(
             @PathVariable("name") @NonNull String photoName,
-            @PathVariable("userId") @NonNull String userId) {
+            @PathVariable("userId") @NonNull String userId
+    ) {
         return imageService.getImageByName(photoName, userId);
     }
 
+    @GetMapping("/{userId}")
+    public List<Image> getPhoto(
+            @PathVariable("userId") @NonNull String userId
+    ) {
+        return imageService.getForOwner(userId);
+    }
 }

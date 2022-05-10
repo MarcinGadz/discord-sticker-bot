@@ -1,41 +1,108 @@
 package com.zzpj.dc.app.dao;
 
+import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.model.Image;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component(value = "ImageS3DAO")
 public class ImageS3DAO implements ImageDAO {
 
-    @Override
-    public void addImage(Image image) {
-        Region region = Region.EU_CENTRAL_1;
-        S3Client s3 = S3Client.builder()
-                .region(region)
+    private final Region awsRegion;
+    private final String bucketName;
+    private final S3Client s3;
+
+    public ImageS3DAO() {
+        awsRegion = Region.EU_CENTRAL_1;
+        s3 = S3Client.builder()
+                .region(awsRegion)
                 .build();
 
-        String bucket = "stickqr";
+        bucketName = "stickqr";
+    }
 
+    @Override
+    public void addImage(Image image) throws ImageContentEmptyException {
+        if (Objects.isNull(image.getContent())) {
+            throw new ImageContentEmptyException("Image content is empty");
+        }
+
+        byte[] imageContent = image.getContent();
         s3.putObject(PutObjectRequest.builder()
-                .bucket(bucket)
+                .bucket(bucketName)
                 .key(image.getOwner() + "/" + image.getName())
                 .contentType("x-png")
-                .contentLength((long) image.getContent().length)
+                .contentLength((long) imageContent.length)
                 .build(),
-                RequestBody.fromBytes(image.getContent())
+                RequestBody.fromBytes(imageContent)
         );
     }
 
     @Override
     public List<Image> getImagesForOwner(String owner) {
-        // TODO Implement getImagesForOwner
-        return new ArrayList<>();
+        return s3.listObjectsV2(ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(owner + "/")
+                .build())
+                .contents()
+                .stream()
+                .map(object -> {
+                    String[] keySplit = object.key().split("/");
+                    String user = keySplit[0];
+                    String filename = keySplit[1];
+
+                    return new Image(
+                            filename,
+                            getObjectUrl(object),
+                            null,
+                            user,
+                            object.lastModified().getEpochSecond()
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String getObjectUrl(S3Object object) {
+        return s3.utilities().getUrl(GetUrlRequest.builder()
+                .bucket(bucketName)
+                .region(awsRegion)
+                .key(object.key())
+                .build())
+                .toString();
+    }
+
+    private Image getImageFromS3Object(S3Object object) {
+        try (
+                ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
+            .bucket(bucketName)
+            .key(object.key())
+            .build())
+        ) {
+            String[] keySplit = object.key().split("/"); // Splits object name into sticker owner's id
+                                                               // and sticker name
+
+            return new Image(
+                    keySplit[0],
+                    getObjectUrl(object),
+                    response.readAllBytes(),
+                    keySplit[1],
+                    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

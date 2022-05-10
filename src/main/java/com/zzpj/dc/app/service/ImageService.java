@@ -1,6 +1,7 @@
 package com.zzpj.dc.app.service;
 
 import com.zzpj.dc.app.dao.ImageDAO;
+import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import com.zzpj.dc.app.model.Image;
@@ -12,13 +13,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ImageService {
     private static final Byte[] PNG_SIGNATURE = new Byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     private static final Long HOUR_MILLIS = 3600000L;
-    private final Integer userAddPerHourLimit;
-    private final Integer userMaxImages;
+    private Integer userAddPerHourLimit;
+    private Integer userMaxImages;
     private ImageDAO imageDAO;
 
     @Autowired()
@@ -37,9 +40,15 @@ public class ImageService {
      * @param image Image to be saved
      * @param owner User who is uploading image
      */
-    public void addImage(MultipartFile image, String owner) throws IOException {
+    public void addImage(MultipartFile image, String owner) throws IOException, ImageContentEmptyException {
         Long currentTime = System.currentTimeMillis();
-        Image img = new Image(image.getOriginalFilename(), image.getBytes(), owner, currentTime);
+        Image img = new Image(
+                image.getOriginalFilename(),
+                null,
+                image.getBytes(),
+                owner,
+                currentTime
+        );
         if(!checkOwnerHourLimits(owner, currentTime) && checkOwnerImagesLimit(owner)) {
             throw new UserLimitExceededException();
         }
@@ -71,7 +80,7 @@ public class ImageService {
         return getForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
-                .toList().size() <= USER_HOURLY_ADD_LIMIT;
+                .toList().size() <= userAddPerHourLimit;
     }
 
     public Image getImageByName(String name, String userId) {
@@ -80,7 +89,6 @@ public class ImageService {
     }
 
     public List<Image> getForOwner(String owner) {
-        //TODO
         return imageDAO.getImagesForOwner(owner);
     }
 
@@ -93,11 +101,15 @@ public class ImageService {
      * @return boolean telling if specified file is PNG
      */
     private boolean isPNG(Image image) {
-        if (image.getContent().length < PNG_SIGNATURE.length) {
+        if (Objects.isNull(image.getContent())) {
+            return false;
+        }
+        byte[] content = image.getContent();
+        if (content.length < PNG_SIGNATURE.length) {
             return false;
         }
         for (int i = 0; i < PNG_SIGNATURE.length; i++) {
-            if (image.getContent()[i] != PNG_SIGNATURE[i]) {
+            if (content[i] != PNG_SIGNATURE[i]) {
                 return false;
             }
         }
