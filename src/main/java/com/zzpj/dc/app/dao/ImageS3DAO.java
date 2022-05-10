@@ -74,32 +74,43 @@ public class ImageS3DAO implements ImageDAO {
                 .collect(Collectors.toList());
     }
 
-    private String getObjectUrl(S3Object object) {
+    private String getObjectUrl(String key) {
         return s3.utilities().getUrl(GetUrlRequest.builder()
-                .bucket(bucketName)
-                .region(awsRegion)
-                .key(object.key())
-                .build())
-                .toString();
+            .bucket(bucketName)
+            .region(awsRegion)
+            .key(key)
+            .build())
+            .toString();
+    }
+
+    private String getObjectUrl(S3Object object) {
+        return getObjectUrl(object.key());
+    }
+
+
+    private Image getImageFromGetObjectResponse(
+            ResponseInputStream<GetObjectResponse> response,
+            String key
+    ) throws IOException {
+        String[] keySplit = key.split("/"); // Splits object name into sticker owner's id
+
+        return new Image(
+                keySplit[0],
+                getObjectUrl(key),
+                response.readAllBytes(),
+                keySplit[1],
+                LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+        );
     }
 
     private Image getImageFromS3Object(S3Object object) {
         try (
                 ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
-            .bucket(bucketName)
-            .key(object.key())
-            .build())
+                        .bucket(bucketName)
+                        .key(object.key())
+                        .build())
         ) {
-            String[] keySplit = object.key().split("/"); // Splits object name into sticker owner's id
-                                                               // and sticker name
-
-            return new Image(
-                    keySplit[0],
-                    getObjectUrl(object),
-                    response.readAllBytes(),
-                    keySplit[1],
-                    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-            );
+            return getImageFromGetObjectResponse(response, object.key());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -107,7 +118,16 @@ public class ImageS3DAO implements ImageDAO {
 
     @Override
     public Image getImageByName(String name, String owner) {
-        // TODO Implement getImageByName
-        return null;
+        String key = owner + "/" + name;
+        try (
+            ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build())
+        ) {
+            return getImageFromGetObjectResponse(response, key);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

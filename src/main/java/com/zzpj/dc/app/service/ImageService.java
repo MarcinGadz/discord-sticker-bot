@@ -84,7 +84,6 @@ public class ImageService {
     }
 
     public Image getImageByName(String name, String userId) {
-        //TODO
         return imageDAO.getImageByName(name, userId);
     }
 
