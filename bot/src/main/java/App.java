@@ -1,5 +1,6 @@
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 
 import javax.security.auth.login.LoginException;
 import java.io.FileInputStream;
@@ -15,11 +16,24 @@ public class App {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream(rootPath + "/app.properties"));
-            JDA jda = JDABuilder.createDefault(properties.getProperty("BOT_TOKEN")).build();
+
+            JDA jda = JDABuilder.createDefault(properties.getProperty("BOT_TOKEN"))
+                    .setActivity(Activity.playing("jpł"))
+                    .build();
+
+            jda.addEventListener(new MessageListener());
+
+            jda.getGuildById("973627370726633532");
+            jda.upsertCommand("komenda", "testtt").queue();
+            jda.awaitReady();
+
+
         } catch (IOException ex) {
             throw new Error("Configuration file not found! Exiting...");
         } catch (LoginException ex) {
             throw new Error("Wrong API key. Exiting...");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
     }
