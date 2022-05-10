@@ -1,6 +1,7 @@
 package com.zzpj.dc.app.rest;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,15 @@ public class ImageController {
             @PathVariable("name") @NonNull String photoName,
             @PathVariable("userId") @NonNull String userId
     ) {
-        return imageService.getImageByName(photoName, userId);
+        try {
+            return imageService.getImageByName(photoName, userId);
+        } catch (ImageDoesntExistException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "User with ID" + userId + " doesn't have image " + userId,
+                    e
+            );
+        }
     }
 
     @GetMapping("/{userId}")

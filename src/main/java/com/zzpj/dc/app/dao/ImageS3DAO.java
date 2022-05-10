@@ -1,6 +1,7 @@
 package com.zzpj.dc.app.dao;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.model.Image;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -103,7 +104,7 @@ public class ImageS3DAO implements ImageDAO {
         );
     }
 
-    private Image getImageFromS3Object(S3Object object) {
+    private Image getImageFromS3Object(S3Object object) throws ImageDoesntExistException {
         try (
                 ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
                         .bucket(bucketName)
@@ -111,13 +112,15 @@ public class ImageS3DAO implements ImageDAO {
                         .build())
         ) {
             return getImageFromGetObjectResponse(response, object.key());
+        } catch (NoSuchKeyException e) {
+            throw new ImageDoesntExistException("Image of given key doesn't exist");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Image getImageByName(String name, String owner) {
+    public Image getImageByName(String name, String owner) throws ImageDoesntExistException {
         String key = owner + "/" + name;
         try (
             ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
@@ -126,6 +129,8 @@ public class ImageS3DAO implements ImageDAO {
                 .build())
         ) {
             return getImageFromGetObjectResponse(response, key);
+        } catch (NoSuchKeyException e) {
+            throw new ImageDoesntExistException("Image of given key doesn't exist");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
