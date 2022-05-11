@@ -49,7 +49,7 @@ public class ImageService {
                 owner,
                 currentTime
         );
-        if(!checkOwnerHourLimits(owner, currentTime) && checkOwnerImagesLimit(owner)) {
+        if(!checkOwnerHourLimits(owner, currentTime) || !checkOwnerImagesLimit(owner)) {
             throw new UserLimitExceededException();
         }
         if (!isPNG(img)) {
