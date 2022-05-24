@@ -12,4 +12,7 @@ public class EnvironmentUtils {
 
     @Value("${app.limit.user.max-images}")
     private Integer userMaxImages;
+
+    @Value("${app.limit.user.add-per-day")
+    private Integer getUserAddPerDayLimit;
 }

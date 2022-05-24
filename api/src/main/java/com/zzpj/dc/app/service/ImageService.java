@@ -12,14 +12,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+
+//TODO Refactor limits to get count of images from DAO
 
 @Service
 public class ImageService {
     private static final Byte[] PNG_SIGNATURE = new Byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     private static final Long HOUR_MILLIS = 3600000L;
     private Integer userAddPerHourLimit;
+    private Integer userAddPerDayLimit;
     private Integer userMaxImages;
     private ImageDAO imageDAO;
 
@@ -29,6 +34,7 @@ public class ImageService {
             EnvironmentUtils env
     ) {
         this.userAddPerHourLimit = env.getUserAddPerHourLimit();
+        this.userAddPerDayLimit = env.getGetUserAddPerDayLimit();
         this.userMaxImages = env.getUserMaxImages();
         this.imageDAO = imageDAO;
     }
@@ -41,6 +47,7 @@ public class ImageService {
      */
     public void addImage(MultipartFile image, String owner) throws IOException, ImageContentEmptyException {
         Long currentTime = System.currentTimeMillis();
+        LocalDate currentDay = LocalDate.now();
         Image img = new Image(
                 image.getOriginalFilename(),
                 null,
@@ -49,6 +56,9 @@ public class ImageService {
                 currentTime
         );
         if(!checkOwnerHourLimits(owner, currentTime) || !checkOwnerImagesLimit(owner)) {
+            throw new UserLimitExceededException();
+        }
+        if(!checkOwnerDailyLimits(owner, currentDay)) {
             throw new UserLimitExceededException();
         }
         if (!isPNG(img)) {
@@ -80,6 +90,22 @@ public class ImageService {
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
                 .toList().size() <= userAddPerHourLimit;
+    }
+
+    /**
+     * Method to check if user exceeded his daily limits for adding images
+     *
+     * @param owner username of user whose limit is checked
+     * @param date  Date for which limits will be checked
+     * @return boolean specifying if user can add more images now
+     */
+    private boolean checkOwnerDailyLimits(String owner, LocalDate date) {
+        Long limitWindowStart = date.atStartOfDay()
+                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return getForOwner(owner)
+                .stream()
+                .filter(img -> img.getSaveDate() > limitWindowStart)
+                .toList().size() <= userAddPerDayLimit;
     }
 
     public Image getImageByName(String name, String userId) {
