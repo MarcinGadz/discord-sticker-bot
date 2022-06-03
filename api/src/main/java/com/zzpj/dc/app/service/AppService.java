@@ -1,18 +1,19 @@
 package com.zzpj.dc.app.service;
 
-import com.zzpj.dc.app.dao.AppDAO;
+import com.zzpj.dc.app.util.EnvironmentUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AppService {
-    @Autowired
-    private AppDAO dao;
+    private final String key;
 
-    public boolean verifyKey(String apiKey, String appName) {
-        return dao.verifyKeyAndApp(apiKey, appName);
+    @Autowired
+    public AppService(EnvironmentUtils envUtils) {
+        this.key = envUtils.getApiKey();
     }
-    public void addApp(String apiKey, String appName) {
-        dao.addKey(apiKey, appName);
+
+    public boolean verifyKey(String apiKey) {
+        return key.equals(apiKey);
     }
 }

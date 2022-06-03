@@ -2,6 +2,7 @@ package com.zzpj.dc.app.dao;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.model.Image;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component(value = "ImageS3DAO")
+@Profile("default")
 public class ImageS3DAO implements ImageDAO {
 
     private final Region awsRegion;
