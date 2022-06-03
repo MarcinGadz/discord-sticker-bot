@@ -16,7 +16,6 @@ public class AuthFilter implements Filter {
 
     private static final Logger LOGGER = Logger.getLogger(AuthFilter.class.getName());
     private static final String API_KEY_HEADER = "x-api-key";
-    private static final String APP_NAME_HEADER = "x-app-name";
     private static final String TRACE_HEADER = "x-trace-id";
 
     @Autowired
@@ -31,21 +30,18 @@ public class AuthFilter implements Filter {
         var req = (HttpServletRequest) servletRequest;
         var response = (HttpServletResponse) servletResponse;
         String apiKey = req.getHeader(API_KEY_HEADER);
-        String appName = req.getHeader(APP_NAME_HEADER);
-
-        if (apiKey == null || apiKey.isBlank() || appName == null || appName.isBlank()) {
+        if (apiKey == null || apiKey.isBlank()) {
             LOGGER.info(requestId + " Got invalid headers");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
         LOGGER.info(requestId + " Headers are present");
-        if (appService.verifyKey(apiKey, appName)) {
+        if (appService.verifyKey(apiKey)) {
             LOGGER.info((requestId + " Authenticated successfully"));
             req.setAttribute(TRACE_HEADER, requestId);
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
-            LOGGER.info((requestId + " Wrong app name or api key"));
+            LOGGER.info((requestId + " Wrong api key"));
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
