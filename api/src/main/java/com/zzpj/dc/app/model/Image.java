@@ -1,6 +1,7 @@
 package com.zzpj.dc.app.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.Optional;
@@ -10,11 +11,13 @@ import java.util.Optional;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class Image {
     private String name;
     private String url;
+    @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private byte[] content;
     private String owner;
     private Long saveDate;

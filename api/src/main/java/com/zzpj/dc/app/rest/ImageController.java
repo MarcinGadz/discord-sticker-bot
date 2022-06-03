@@ -49,7 +49,7 @@ public class ImageController {
     }
 
     @GetMapping("/{userId}")
-    public List<Image> getPhoto(
+    public List<Image> getPhotos(
             @PathVariable("userId") @NonNull String userId
     ) {
         return imageService.getForOwner(userId);
