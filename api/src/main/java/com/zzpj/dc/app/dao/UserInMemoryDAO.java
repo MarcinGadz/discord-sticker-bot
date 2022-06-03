@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-@Profile("LOCAL")
+//@Profile("LOCAL")
 @Component
 public class UserInMemoryDAO implements UserDAO{
     private List<User> users = new ArrayList<>();
