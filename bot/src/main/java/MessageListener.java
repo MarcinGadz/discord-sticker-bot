@@ -30,34 +30,16 @@ public class MessageListener extends ListenerAdapter {
 
         if (event.getName().equals("upload")) {
             // pobierz ostatnią wiadomość z czatu
-//            event.getChannel()
-//                    .getHistory()
-//                    .retrievePast(1)
-//                    .map(messages -> messages.get(0))
-//                    .queue(message -> event.reply(message.getContentDisplay()).queue());
-
-            String imageURL;
-            try {
-                 imageURL = Objects.requireNonNull(event.getOption("image")).getAsString();
-            } catch (NullPointerException e) {
-                event.reply("Należy podać adres URL do obrazka").queue();
-                return;
-            }
-
-            HttpClient httpClient = HttpClient.newHttpClient();
-            HttpRequest requestImage = HttpRequest.newBuilder()
-                    .uri(URI.create(imageURL))
-                    .build();
+            Message message = event.getChannel()
+                    .getHistory()
+                    .retrievePast(1)
+                    .map(messages -> messages.get(0)).complete();
 
             try {
-                // body of the upload image request
-                HttpResponse<byte[]> response = httpClient.send(requestImage, HttpResponse.BodyHandlers.ofByteArray());
-
-
+                ImageService.uploadImage(message);
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                event.reply(e.getMessage()).queue();
             }
-            event.reply(imageURL).queue();
         }
     }
 }
