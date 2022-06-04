@@ -54,12 +54,13 @@ public class AppIntegrationTests {
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         String filename = "image.png";
+        String stickerName = "image";
         var file = new ClassPathResource(filename);
         var map = new LinkedMultiValueMap<String, Object>();
         map.add("image", file);
 
         HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, httpHeaders);
-        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner,
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
                 HttpMethod.POST,
                 entity,
                 Object.class);
@@ -68,14 +69,14 @@ public class AppIntegrationTests {
 
         httpHeaders.setContentType(null);
 
-        ResponseEntity<Image> res = restTemplate.exchange(basePath + firstOwner + "/" + filename,
+        ResponseEntity<Image> res = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
                 HttpMethod.GET,
                 new HttpEntity<>(httpHeaders),
                 Image.class);
         assertEquals(HttpStatus.OK, res.getStatusCode());
         assertNotNull(res.getBody());
         assertEquals(res.getBody().getOwner(), firstOwner);
-        assertEquals(res.getBody().getName(), filename);
+        assertEquals(res.getBody().getName(), stickerName);
     }
 
     @Test
@@ -83,13 +84,13 @@ public class AppIntegrationTests {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.set(keyHeader, environmentUtils.getApiKey());
         httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
-
+        String stickerName = "image";
         var file = new ClassPathResource("randomfile.txt");
         var map = new LinkedMultiValueMap<String, Object>();
         map.add("image", file);
 
         HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, httpHeaders);
-        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner,
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
                 HttpMethod.POST,
                 entity,
                 Object.class);
