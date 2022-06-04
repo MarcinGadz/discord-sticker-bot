@@ -32,12 +32,13 @@ public class ImageController {
      * @param image Image to be added (must be valid PNG file with max size of 1MiB)
      * @param owner ID of user who is adding image
      */
-    @PostMapping(value = "/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{userId}/{imageName}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public void addImage(
             @PathVariable("userId") @NonNull String owner,
+            @PathVariable("imageName") @NonNull String imageName,
             @RequestBody @NonNull MultipartFile image
     ) throws IOException, ImageContentEmptyException {
-        imageService.addImage(image, owner);
+        imageService.addImage(image, imageName, owner);
     }
 
     @GetMapping("/{userId}/{name}")

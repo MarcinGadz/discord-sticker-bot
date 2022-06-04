@@ -50,11 +50,11 @@ public class ImageService {
      * @param image Image to be saved
      * @param owner User who is uploading image
      */
-    public void addImage(MultipartFile image, String owner) throws IOException, ImageContentEmptyException {
+    public void addImage(MultipartFile image, String imageName, String owner) throws IOException, ImageContentEmptyException {
         Long currentTime = System.currentTimeMillis();
         LocalDate currentDay = LocalDate.now();
         Image img = new Image(
-                image.getOriginalFilename(),
+                imageName,
                 null,
                 image.getBytes(),
                 owner,
