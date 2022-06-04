@@ -6,32 +6,42 @@ import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.util.EnvironmentUtils;
+import com.zzpj.dc.app.util.TimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class ImageService {
     private static final Byte[] PNG_SIGNATURE = new Byte[]{(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
     private static final Long HOUR_MILLIS = 3600000L;
-    private Integer userAddPerHourLimit;
-    private Integer userMaxImages;
+    private final Integer userAddPerHourLimit;
+    private final Integer userAddPerDayLimit;
+    private final Integer userMaxImages;
     private ImageDAO imageDAO;
+    private TimeUtils timeUtils;
 
-    @Autowired()
-    public void setImageDAO(
-            @Qualifier("ImageS3DAO") ImageDAO imageDAO,
-            EnvironmentUtils env
-    ) {
+    @Autowired
+    public ImageService(EnvironmentUtils env) {
         this.userAddPerHourLimit = env.getUserAddPerHourLimit();
+        this.userAddPerDayLimit = env.getGetUserAddPerDayLimit();
         this.userMaxImages = env.getUserMaxImages();
+    }
+
+    @Autowired
+    public void setImageDAO(ImageDAO imageDAO) {
         this.imageDAO = imageDAO;
+    }
+
+    @Autowired
+    public void setTimeUtils(TimeUtils timeUtils) {
+        this.timeUtils = timeUtils;
     }
 
     /**
@@ -42,6 +52,7 @@ public class ImageService {
      */
     public void addImage(MultipartFile image, String owner) throws IOException, ImageContentEmptyException {
         Long currentTime = System.currentTimeMillis();
+        LocalDate currentDay = LocalDate.now();
         Image img = new Image(
                 image.getOriginalFilename(),
                 null,
@@ -49,7 +60,10 @@ public class ImageService {
                 owner,
                 currentTime
         );
-        if(!checkOwnerHourLimits(owner, currentTime) && checkOwnerImagesLimit(owner)) {
+        if(!checkOwnerHourLimits(owner, currentTime) || !checkOwnerImagesLimit(owner)) {
+            throw new UserLimitExceededException();
+        }
+        if(!checkOwnerDailyLimits(owner, currentDay)) {
             throw new UserLimitExceededException();
         }
         if (!isPNG(img)) {
@@ -83,10 +97,37 @@ public class ImageService {
                 .toList().size() <= userAddPerHourLimit;
     }
 
+    /**
+     * Method to check if user exceeded his daily limits for adding images
+     *
+     * @param owner username of user whose limit is checked
+     * @param date  Date for which limits will be checked
+     * @return boolean specifying if user can add more images now
+     */
+    private boolean checkOwnerDailyLimits(String owner, LocalDate date) {
+        Long limitWindowStart = date.atStartOfDay()
+                .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return getForOwner(owner)
+                .stream()
+                .filter(img -> img.getSaveDate() > limitWindowStart)
+                .toList().size() <= userAddPerDayLimit;
+    }
+
+    /**
+     * Get one image specified by name
+     * @param name name of the image to be found
+     * @param userId owner of image
+     * @return found image or null
+     */
     public Image getImageByName(String name, String userId) {
         return imageDAO.getImageByName(name, userId);
     }
 
+    /**
+     * Get list of all images owned by specified user
+     * @param owner username of owner
+     * @return list of all images owned by user
+     */
     public List<Image> getForOwner(String owner) {
         return imageDAO.getImagesForOwner(owner);
     }

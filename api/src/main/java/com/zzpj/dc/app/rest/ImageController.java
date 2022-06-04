@@ -4,15 +4,12 @@ import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-
 import java.util.List;
 
 /**
@@ -39,12 +36,8 @@ public class ImageController {
     public void addImage(
             @PathVariable("userId") @NonNull String owner,
             @RequestBody @NonNull MultipartFile image
-    ) {
-        try {
-            imageService.addImage(image, owner);
-        } catch (IOException | ImageContentEmptyException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
+    ) throws IOException, ImageContentEmptyException {
+        imageService.addImage(image, owner);
     }
 
     @GetMapping("/{userId}/{name}")
@@ -56,7 +49,7 @@ public class ImageController {
     }
 
     @GetMapping("/{userId}")
-    public List<Image> getPhoto(
+    public List<Image> getPhotos(
             @PathVariable("userId") @NonNull String userId
     ) {
         return imageService.getForOwner(userId);
