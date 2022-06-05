@@ -2,7 +2,6 @@ package com.zzpj.dc.app.dao;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.model.Image;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 

@@ -170,4 +170,17 @@ public class AppIntegrationTests {
         assertNotNull(body);
         assertEquals(0, body.size());
     }
+
+    @Test
+    public void getNonExistingImage() {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set(keyHeader, environmentUtils.getApiKey());
+
+        ResponseEntity<Image> response = restTemplate.exchange(basePath + "i-do-not-exists/same",
+                HttpMethod.GET,
+                new HttpEntity<>(httpHeaders),
+                Image.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
 }

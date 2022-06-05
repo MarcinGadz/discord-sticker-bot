@@ -1,6 +1,7 @@
 package com.zzpj.dc.app.rest;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageNotFoundException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST Controller used to manipulate images
@@ -46,7 +48,8 @@ public class ImageController {
             @PathVariable("name") @NonNull String photoName,
             @PathVariable("userId") @NonNull String userId
     ) {
-        return imageService.getImageByName(photoName, userId);
+        Image imageByName = imageService.getImageByName(photoName, userId);
+        return Optional.ofNullable(imageByName).orElseThrow(ImageNotFoundException::new);
     }
 
     @GetMapping("/{userId}")

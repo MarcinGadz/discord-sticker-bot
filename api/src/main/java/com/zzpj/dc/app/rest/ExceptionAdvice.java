@@ -1,6 +1,8 @@
 package com.zzpj.dc.app.rest;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageNotFoundException;
+import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,5 +34,13 @@ public class ExceptionAdvice {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<Map<String, String>> handle(IOException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Error"));
+    }
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handle(ImageNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Image not found"));
+    }
+    @ExceptionHandler(UserLimitExceededException.class)
+    public ResponseEntity<Map<String, String>> handle(UserLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("message", "Limit exceeded"));
     }
 }
