@@ -33,6 +33,8 @@ public class App {
                     .queue();
             jda.upsertCommand("list", "List all your sticker names").queue();
 
+            jda.upsertCommand("test", "123").queue();
+
             jda.awaitReady();
 
 
