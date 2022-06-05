@@ -37,7 +37,7 @@ public class ImageS3DAO implements ImageDAO {
     @Override
     public void addImage(Image image) throws ImageContentEmptyException {
         if (Objects.isNull(image.getContent())) {
-            throw new ImageContentEmptyException("Image content is empty");
+            throw new ImageContentEmptyException();
         }
 
         byte[] imageContent = image.getContent();
