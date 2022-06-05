@@ -22,7 +22,7 @@ public class ImageService {
     private static final String apiURL = "http://localhost:8080/image/";
     private static final String apiKey = "13cf17e6-0929-475b-bad0-1b7ab1bdca80";
 
-    public static void uploadImage(String imageURL, String imageName, String userID) throws BaseException {
+    public static void uploadSticker(String imageURL, String stickerName, String userID) throws BaseException {
         byte[] imageData;
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
@@ -37,7 +37,7 @@ public class ImageService {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             MultipartEntityBuilder mpBuilder = MultipartEntityBuilder.create();
             mpBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-            mpBuilder.addBinaryBody("image", imageData, ContentType.DEFAULT_BINARY, imageName);
+            mpBuilder.addBinaryBody("image", imageData, ContentType.DEFAULT_BINARY, stickerName);
 
             HttpPost uploadRequest = new HttpPost(apiURL + userID);
             uploadRequest.setEntity(mpBuilder.build());
@@ -49,7 +49,6 @@ public class ImageService {
                 throw new BaseException("Couldn't upload");
             }
 
-            System.out.println(res.getStatusLine());
             res.close();
         } catch (IOException e) {
             throw new BaseException("Couldn't upload the image");
@@ -68,10 +67,31 @@ public class ImageService {
             Gson gson = new Gson();
             List<ImageDto> images = gson.fromJson(out.toString(), new TypeToken<ArrayList<ImageDto>>() {}.getType());
             out.close();
+            response.close();
 
             return images;
         } catch (Exception e) {
             throw new BaseException("Couldn't get requested list");
+        }
+    }
+
+    public static ImageDto getSticker(String stickerName, String userID) throws BaseException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet request = new HttpGet(apiURL + userID + "/" + stickerName);
+            request.setHeader("x-api-key", apiKey);
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            response.getEntity().writeTo(out);
+
+            Gson gson = new Gson();
+            ImageDto image = gson.fromJson(out.toString(), ImageDto.class);
+            out.close();
+            response.close();
+
+            return image;
+        } catch (IOException e) {
+            throw new BaseException("Couldn't get the image");
         }
     }
 }

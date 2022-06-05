@@ -24,7 +24,7 @@ public class MessageListener extends ListenerAdapter {
 
                 System.out.println(userID);
 
-                ImageService.uploadImage(imageURL, imageName, userID);
+                ImageService.uploadSticker(imageURL, imageName, userID);
                 event.reply("Successfully uploaded sticker named: " + imageName).queue();
             } catch (NullPointerException e) {
                 event.reply("Something went wrong").queue();
@@ -47,6 +47,18 @@ public class MessageListener extends ListenerAdapter {
                 eb.setDescription(content);
 
                 event.replyEmbeds(eb.build()).queue();
+            } catch (BaseException e) {
+                event.reply(e.getMessage()).queue();
+            }
+        }
+
+        if (event.getName().equals("send")) {
+            try {
+                String stickerName = Objects.requireNonNull(event.getOption("name")).getAsString();
+                ImageDto image = ImageService.getSticker(stickerName, userID);
+                event.reply(image.getUrl()).queue();
+            } catch (NullPointerException e) {
+                event.reply("Something went wrong").queue();
             } catch (BaseException e) {
                 event.reply(e.getMessage()).queue();
             }

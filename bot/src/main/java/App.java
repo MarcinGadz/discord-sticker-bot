@@ -28,6 +28,9 @@ public class App {
                     .addOption(OptionType.ATTACHMENT, "image", "image to upload", true)
                     .addOption(OptionType.STRING, "name", "sticker name", true)
                     .queue();
+            jda.upsertCommand("send", "Send selected sticker")
+                    .addOption(OptionType.STRING, "name", "sticker name", true)
+                    .queue();
             jda.upsertCommand("list", "List all your sticker names").queue();
 
             jda.awaitReady();
