@@ -51,8 +51,8 @@ public class ImageService {
      * @param owner User who is uploading image
      */
     public void addImage(MultipartFile image, String imageName, String owner) throws IOException, ImageContentEmptyException {
-        Long currentTime = System.currentTimeMillis();
-        LocalDate currentDay = LocalDate.now();
+        Long currentTime = timeUtils.getCurrentMilis();
+        LocalDate currentDay = timeUtils.getCurrentDay();
         Image img = new Image(
                 imageName,
                 null,
@@ -94,7 +94,7 @@ public class ImageService {
         return getForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
-                .toList().size() <= userAddPerHourLimit;
+                .toList().size() < userAddPerHourLimit;
     }
 
     /**
@@ -110,7 +110,7 @@ public class ImageService {
         return getForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
-                .toList().size() <= userAddPerDayLimit;
+                .toList().size() < userAddPerDayLimit;
     }
 
     /**

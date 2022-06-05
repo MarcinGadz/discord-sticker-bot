@@ -1,8 +1,11 @@
 package com.zzpj.dc.app;
 
 import com.zzpj.dc.app.model.Image;
+import com.zzpj.dc.app.service.ImageService;
 import com.zzpj.dc.app.util.EnvironmentUtils;
+import com.zzpj.dc.app.util.TimeUtils;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -13,10 +16,13 @@ import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 
 import javax.annotation.PostConstruct;
+import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AppIntegrationTests {
@@ -32,7 +38,7 @@ public class AppIntegrationTests {
 
     private final ParameterizedTypeReference<List<Image>> typeReference = new ParameterizedTypeReference<>() {
     };
-
+    private final HttpHeaders headers = new HttpHeaders();
     private String basePath;
     @LocalServerPort
     private int port;
@@ -42,16 +48,18 @@ public class AppIntegrationTests {
     @Autowired
     private EnvironmentUtils environmentUtils;
 
+    @Autowired
+    private ImageService imageService;
+
     @PostConstruct
     private void setup() {
         basePath = "http://localhost:" + port + "/image/";
+        headers.set(keyHeader, environmentUtils.getApiKey());
     }
 
     @Test
     public void addGetPhotoSuccessful() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(keyHeader, environmentUtils.getApiKey());
-        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         String filename = "image.png";
         String stickerName = "image";
@@ -59,7 +67,7 @@ public class AppIntegrationTests {
         var map = new LinkedMultiValueMap<String, Object>();
         map.add("image", file);
 
-        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, httpHeaders);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
         ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
                 HttpMethod.POST,
                 entity,
@@ -67,11 +75,11 @@ public class AppIntegrationTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
 
-        httpHeaders.setContentType(null);
+        headers.setContentType(null);
 
         ResponseEntity<Image> res = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
                 HttpMethod.GET,
-                new HttpEntity<>(httpHeaders),
+                new HttpEntity<>(headers),
                 Image.class);
         assertEquals(HttpStatus.OK, res.getStatusCode());
         assertNotNull(res.getBody());
@@ -81,36 +89,120 @@ public class AppIntegrationTests {
 
     @Test
     public void addPhotoNonPNG() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(keyHeader, environmentUtils.getApiKey());
-        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         String stickerName = "image";
         var file = new ClassPathResource("randomfile.txt");
         var map = new LinkedMultiValueMap<String, Object>();
         map.add("image", file);
 
-        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, httpHeaders);
-        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + "nonPngOwner" + "/" + stickerName,
                 HttpMethod.POST,
                 entity,
                 Object.class);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(Map.of("message", "File is not valid PNG"), response.getBody());
+
+        headers.setContentType(null);
     }
 
     @Test
     public void addPhotoExceededHourlyLimit() {
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        int limit = environmentUtils.getUserAddPerHourLimit();
+        String filename = "image.png";
+        String randomowner = "randomowner";
 
+        var file = new ClassPathResource(filename);
+        var map = new LinkedMultiValueMap<String, Object>();
+        map.add("image", file);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+
+        for (int i = 0; i < limit; i++) {
+            String stickerName = MessageFormat.format("image-{0}", i);
+            ResponseEntity<Object> response = restTemplate.exchange(basePath + randomowner + "/" + stickerName,
+                    HttpMethod.POST,
+                    entity,
+                    Object.class);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        String stickerName = "image-n";
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + randomowner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+
+
+        headers.setContentType(null);
     }
 
     @Test
     public void addPhotoExceededDailyLimit() {
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        int hourlyLimit = environmentUtils.getUserAddPerHourLimit();
+        int dailyLimit = environmentUtils.getGetUserAddPerDayLimit();
+        String filename = "image.png";
+        String yetAnotherOwner = "yetanother";
 
+        var file = new ClassPathResource(filename);
+        var map = new LinkedMultiValueMap<String, Object>();
+        map.add("image", file);
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+
+        TimeUtils mock = Mockito.mock(TimeUtils.class);
+        imageService.setTimeUtils(mock);
+        when(mock.getCurrentDay()).thenReturn(LocalDate.ofEpochDay(0));
+
+        int i;
+        for (i = 0; i < hourlyLimit; i++) {
+            when(mock.getCurrentMilis()).thenReturn(200L * i);
+            String stickerName = MessageFormat.format("image-{0}", i);
+            ResponseEntity<Object> response = restTemplate.exchange(basePath + yetAnotherOwner + "/" + stickerName,
+                    HttpMethod.POST,
+                    entity,
+                    Object.class);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        for (; i < dailyLimit; i++) {
+            when(mock.getCurrentMilis()).thenReturn(200L * i + 7200*1000);
+            String stickerName = MessageFormat.format("image-{0}", i);
+
+            ResponseEntity<Object> response = restTemplate.exchange(basePath + yetAnotherOwner + "/" + stickerName,
+                    HttpMethod.POST,
+                    entity,
+                    Object.class);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
+
+        String stickerName = "image-n";
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + yetAnotherOwner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+
+        headers.setContentType(null);
     }
 
     @Test
     public void addToLargeFIle() {
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        String stickerName = "notok";
+        var file = new ClassPathResource("toolarge");
+        var map = new LinkedMultiValueMap<String, Object>();
+        map.add("image", file);
 
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, response.getStatusCode());
+
+        headers.setContentType(null);
     }
 
     @Test
@@ -137,12 +229,9 @@ public class AppIntegrationTests {
 
     @Test
     public void getAllForOwnerSuccessful() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(keyHeader, environmentUtils.getApiKey());
-
         ResponseEntity<List<Image>> response = restTemplate.exchange(basePath + firstOwner,
                 HttpMethod.GET,
-                new HttpEntity<>(httpHeaders),
+                new HttpEntity<>(headers),
                 typeReference);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -157,12 +246,10 @@ public class AppIntegrationTests {
 
     @Test
     public void getAllForNonExistingOwner() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(keyHeader, environmentUtils.getApiKey());
 
         ResponseEntity<List<Image>> response = restTemplate.exchange(basePath + "i-do-not-exists",
                 HttpMethod.GET,
-                new HttpEntity<>(httpHeaders),
+                new HttpEntity<>(headers),
                 typeReference);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -173,12 +260,10 @@ public class AppIntegrationTests {
 
     @Test
     public void getNonExistingImage() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set(keyHeader, environmentUtils.getApiKey());
 
         ResponseEntity<Image> response = restTemplate.exchange(basePath + "i-do-not-exists/same",
                 HttpMethod.GET,
-                new HttpEntity<>(httpHeaders),
+                new HttpEntity<>(headers),
                 Image.class);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
