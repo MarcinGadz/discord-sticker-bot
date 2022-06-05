@@ -18,6 +18,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Class implementing ImageDAO functionality for AWS S3
+ */
 @Component(value = "ImageS3DAO")
 public class ImageS3DAO implements ImageDAO {
 
@@ -34,6 +37,12 @@ public class ImageS3DAO implements ImageDAO {
         bucketName = "stickqr";
     }
 
+    /**
+     * Sends an image to S3
+     *
+     * @param image Image to be sent to S3 (has to have valid PNG content)
+     * @throws ImageContentEmptyException when provided Image has no content
+     */
     @Override
     public void addImage(Image image) throws ImageContentEmptyException {
         if (Objects.isNull(image.getContent())) {
@@ -51,6 +60,12 @@ public class ImageS3DAO implements ImageDAO {
         );
     }
 
+    /**
+     * Gets all the images, that are owned by the provided owner from S3.
+     *
+     * @param owner ID of the owner the images are supposed to be listed for
+     * @return List of all images that belong to a given owner
+     */
     @Override
     public List<Image> getImagesForOwner(String owner) {
         return s3.listObjectsV2(ListObjectsV2Request.builder()
@@ -75,6 +90,12 @@ public class ImageS3DAO implements ImageDAO {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Creates an access URL to a given object
+     *
+     * @param key Key of the S3 object
+     * @return URL to the object
+     */
     private String getObjectUrl(String key) {
         return s3.utilities().getUrl(GetUrlRequest.builder()
             .bucket(bucketName)
@@ -89,6 +110,12 @@ public class ImageS3DAO implements ImageDAO {
     }
 
 
+    /**
+     * @param response GetObjectResponse wrapped inside a ResponseInputStream
+     * @param key Key of the object
+     * @return Image object containing Image information and it's content
+     * @throws IOException
+     */
     private Image getImageFromGetObjectResponse(
             ResponseInputStream<GetObjectResponse> response,
             String key
@@ -104,21 +131,12 @@ public class ImageS3DAO implements ImageDAO {
         );
     }
 
-    private Image getImageFromS3Object(S3Object object) throws ImageDoesntExistException {
-        try (
-                ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(object.key())
-                        .build())
-        ) {
-            return getImageFromGetObjectResponse(response, object.key());
-        } catch (NoSuchKeyException e) {
-            throw new ImageDoesntExistException("Image of given key doesn't exist");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    /**
+     * @param name Name of the image to be retrieved
+     * @param owner Owner of the image to be retrieved
+     * @return Image object containing a valid PNG content
+     * @throws ImageDoesntExistException
+     */
     @Override
     public Image getImageByName(String name, String owner) throws ImageDoesntExistException {
         String key = owner + "/" + name;
