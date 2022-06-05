@@ -13,24 +13,23 @@ public class App {
     public static void main(String[] args) {
 
         String rootPath = System.getProperty("user.dir");
-
         Properties properties = new Properties();
+
         try {
             properties.load(new FileInputStream(rootPath + "/app.properties"));
-
             JDA jda = JDABuilder.createDefault(properties.getProperty("BOT_TOKEN"))
                     .setActivity(Activity.playing("jpł"))
                     .build();
 
             jda.addEventListener(new MessageListener());
-
             jda.getGuildById("973627370726633532");
-            jda.upsertCommand("komenda", "testtt")
-                    .queue();
+
             jda.upsertCommand("upload", "Upload new sticker")
                     .addOption(OptionType.ATTACHMENT, "image", "image to upload", true)
                     .addOption(OptionType.STRING, "name", "sticker name", true)
                     .queue();
+            jda.upsertCommand("list", "List all your sticker names").queue();
+
             jda.awaitReady();
 
 
@@ -41,7 +40,5 @@ public class App {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
-
 }
