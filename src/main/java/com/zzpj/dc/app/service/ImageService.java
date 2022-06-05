@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class ImageService {
@@ -114,5 +113,15 @@ public class ImageService {
             }
         }
         return true;
+    }
+
+    /**
+     * Removes image of given object-name from S3
+     * @param name name of the image to be removed
+     * @param owner owner of the image to be removed
+     * @throws ImageDoesntExistException image of this name/owner was not found in S3
+     */
+    public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
+        imageDAO.removeImageByName(name, owner);
     }
 }

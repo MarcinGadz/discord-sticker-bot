@@ -1,8 +1,10 @@
 package com.zzpj.dc.app.dao;
 
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.model.Image;
 import org.springframework.stereotype.Component;
 
+import javax.naming.OperationNotSupportedException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,5 +28,10 @@ public class ImageInMemoryDAO implements ImageDAO{
         return images.stream()
                 .filter(img -> img.getOwner().equals(owner) && img.getName().equals(name))
                 .findFirst().orElse(null);
+    }
+
+    @Override
+    public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
+        throw new UnsupportedOperationException();
     }
 }

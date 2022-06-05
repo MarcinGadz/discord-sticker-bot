@@ -70,4 +70,20 @@ public class ImageController {
     ) {
         return imageService.getForOwner(userId);
     }
+
+    @DeleteMapping("/{userId}/{name}")
+    public void deletePhoto(
+            @PathVariable("name") @NonNull String photoName,
+            @PathVariable("userId") @NonNull String userId
+    ) {
+        try {
+            imageService.removeImageByName(photoName, userId);
+        } catch (ImageDoesntExistException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "User with ID " + userId + " doesn't have image " + userId,
+                    e
+            );
+        }
+    }
 }

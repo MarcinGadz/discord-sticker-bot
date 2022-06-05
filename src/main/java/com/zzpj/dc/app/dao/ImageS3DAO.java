@@ -114,7 +114,7 @@ public class ImageS3DAO implements ImageDAO {
      * @param response GetObjectResponse wrapped inside a ResponseInputStream
      * @param key Key of the object
      * @return Image object containing Image information and it's content
-     * @throws IOException
+     * @throws IOException problem with reading Url
      */
     private Image getImageFromGetObjectResponse(
             ResponseInputStream<GetObjectResponse> response,
@@ -135,7 +135,7 @@ public class ImageS3DAO implements ImageDAO {
      * @param name Name of the image to be retrieved
      * @param owner Owner of the image to be retrieved
      * @return Image object containing a valid PNG content
-     * @throws ImageDoesntExistException
+     * @throws ImageDoesntExistException  image doesn't exit in the bucket
      */
     @Override
     public Image getImageByName(String name, String owner) throws ImageDoesntExistException {
@@ -151,6 +151,27 @@ public class ImageS3DAO implements ImageDAO {
             throw new ImageDoesntExistException("Image of given key doesn't exist");
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Removes an image of given filename from the S3 bucket
+     *
+     * @param name name of the object that should be removed
+     * @param owner owner of the object
+     * @throws ImageDoesntExistException image doesn't exist in the bucket
+     */
+    @Override
+    public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
+        String key = owner + "/" + name;
+        try {
+            s3.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build()
+            );
+        } catch (NoSuchKeyException e) {
+            throw new ImageDoesntExistException("Image of given key doesn't exist");
         }
     }
 }
