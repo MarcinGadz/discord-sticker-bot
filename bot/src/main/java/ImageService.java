@@ -14,13 +14,11 @@ public class ImageService {
     private static final String apiURL = "http://localhost:8080/image";
     private static final String apiKey = "13cf17e6-0929-475b-bad0-1b7ab1bdca80";
 
-    public static void uploadImage(Message message, String imageName, String userID) throws BaseException {
+    public static void uploadImage(String imageURL, String imageName, String userID) throws BaseException {
 
         byte[] imageData;
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            String imageURL = message.getAttachments().get(0).getUrl();
-
             HttpGet getImageDataRequest = new HttpGet(imageURL);
             CloseableHttpResponse response = httpClient.execute(getImageDataRequest);
             HttpEntity entity = response.getEntity();

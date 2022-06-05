@@ -27,8 +27,9 @@ public class App {
             jda.getGuildById("973627370726633532");
             jda.upsertCommand("komenda", "testtt")
                     .queue();
-            jda.upsertCommand("upload", "testtt")
-                    .addOption(OptionType.STRING, "image", "image to upload", true)
+            jda.upsertCommand("upload", "Upload new sticker")
+                    .addOption(OptionType.ATTACHMENT, "image", "image to upload", true)
+                    .addOption(OptionType.STRING, "name", "sticker name", true)
                     .queue();
             jda.awaitReady();
 

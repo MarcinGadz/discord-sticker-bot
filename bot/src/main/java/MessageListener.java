@@ -18,16 +18,12 @@ public class MessageListener extends ListenerAdapter {
         if (event.getName().equals("upload")) {
             try {
                 String userID = event.getUser().getId();
-                String imageName = Objects.requireNonNull(event.getOption("image")).getAsString();
+                String imageName = Objects.requireNonNull(event.getOption("name")).getAsString();
+                String imageURL = Objects.requireNonNull(event.getOption("image")).getAsAttachment().getUrl();
 
                 System.out.println(userID);
 
-                Message message = event.getChannel()
-                        .getHistory()
-                        .retrievePast(1)
-                        .map(messages -> messages.get(0)).complete();
-
-                ImageService.uploadImage(message, imageName, userID);
+                ImageService.uploadImage(imageURL, imageName, userID);
                 event.reply("Successfully uploaded sticker named: " + imageName).queue();
             } catch (NullPointerException e) {
                 event.reply("Something went wrong").queue();
