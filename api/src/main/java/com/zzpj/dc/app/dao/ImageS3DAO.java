@@ -52,10 +52,12 @@ public class ImageS3DAO implements ImageDAO {
     }
 
     @Override
-    public List<Image> getImagesForOwner(String owner) {
+    public List<Image> getImagesForOwner(String owner, int maxItems, String startAfter) {
         return s3.listObjectsV2(ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .prefix(owner + "/")
+                .maxKeys(maxItems)
+                .startAfter(owner + "/" + startAfter)
                 .build())
                 .contents()
                 .stream()

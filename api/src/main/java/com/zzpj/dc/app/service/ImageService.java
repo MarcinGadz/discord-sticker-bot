@@ -79,7 +79,7 @@ public class ImageService {
      * @return boolean specifying if user does not have more than USER_MAX_IMAGES - 1 images
      */
     private boolean checkOwnerImagesLimit(String owner) {
-        return getForOwner(owner).size() < userMaxImages;
+        return imageDAO.getImagesForOwner(owner).size() < userMaxImages;
     }
 
     /**
@@ -91,7 +91,7 @@ public class ImageService {
      */
     private boolean checkOwnerHourLimits(String owner, Long time) {
         Long limitWindowStart = time - HOUR_MILLIS;
-        return getForOwner(owner)
+        return imageDAO.getImagesForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
                 .toList().size() < userAddPerHourLimit;
@@ -107,7 +107,7 @@ public class ImageService {
     private boolean checkOwnerDailyLimits(String owner, LocalDate date) {
         Long limitWindowStart = date.atStartOfDay()
                 .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        return getForOwner(owner)
+        return imageDAO.getImagesForOwner(owner)
                 .stream()
                 .filter(img -> img.getSaveDate() > limitWindowStart)
                 .toList().size() < userAddPerDayLimit;
@@ -128,8 +128,8 @@ public class ImageService {
      * @param owner username of owner
      * @return list of all images owned by user
      */
-    public List<Image> getForOwner(String owner) {
-        return imageDAO.getImagesForOwner(owner);
+    public List<Image> getForOwner(String owner, int maxItems, String startAfter) {
+        return imageDAO.getImagesForOwner(owner, maxItems, startAfter);
     }
 
     /**
