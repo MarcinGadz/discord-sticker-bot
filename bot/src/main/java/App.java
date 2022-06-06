@@ -31,12 +31,12 @@ public class App {
             jda.upsertCommand("send", "Send selected sticker")
                     .addOption(OptionType.STRING, "name", "sticker name", true)
                     .queue();
+            jda.upsertCommand("remove", "Remove selected sticker")
+                    .addOption(OptionType.STRING, "name", "sticker name", true)
+                    .queue();
             jda.upsertCommand("list", "List all your sticker names").queue();
 
-            jda.upsertCommand("test", "123").queue();
-
             jda.awaitReady();
-
 
         } catch (IOException ex) {
             throw new Error("Configuration file not found! Exiting...");

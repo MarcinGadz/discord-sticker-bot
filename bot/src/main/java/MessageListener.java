@@ -24,9 +24,9 @@ public class MessageListener extends ListenerAdapter {
         String buttonId = event.getButton().getId();
 
         assert buttonId != null;
-        if (buttonId.contains("list/next")) {
-            PaginationInteractions.updateButtons(event);
-
+        switch (buttonId) {
+            case "list/previous" -> PaginationInteractions.getPreviousPage(event);
+            case "list/next" -> PaginationInteractions.getNextPage(event);
         }
     }
 }

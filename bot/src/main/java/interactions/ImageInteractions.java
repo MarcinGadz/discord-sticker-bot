@@ -5,6 +5,7 @@ import exceptions.BaseException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import services.ImageService;
 
 import java.awt.*;
@@ -34,9 +35,14 @@ public class ImageInteractions {
         try {
             String userID = event.getUser().getId();
 
-            List<ImageDto> images = ImageService.getImagesForUser(userID);
+            List<ImageDto> images = ImageService.getImagesForUser(userID, null);
             List<MessageEmbed> embeds = ImageInteractions.embedImages(images);
-            PaginationInteractions.listPaginated(embeds, event);
+
+            List<String> history = new ArrayList<>();
+            history.add(images.get(images.size() - 1).getName());
+            List<Button> buttons = PaginationInteractions.getButtons(history, false);
+
+            event.replyEmbeds(embeds).addActionRow(buttons).setEphemeral(false).queue();
         } catch (BaseException e) {
             throw new RuntimeException(e);
         }
