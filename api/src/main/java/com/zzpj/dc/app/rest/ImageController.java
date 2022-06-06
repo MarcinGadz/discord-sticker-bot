@@ -4,6 +4,7 @@ import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.exceptions.ImageNotFoundException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
+import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
@@ -54,8 +55,10 @@ public class ImageController {
 
     @GetMapping("/{userId}")
     public List<Image> getPhotos(
-            @PathVariable("userId") @NonNull String userId
+            @PathVariable("userId") @NonNull String userId,
+            @RequestParam(defaultValue = "10") int maxItems,
+            @RequestParam(defaultValue = "") String startAfter
     ) {
-        return imageService.getForOwner(userId);
+        return imageService.getForOwner(userId, maxItems, startAfter);
     }
 }

@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +30,10 @@ public class ImageInMemoryDAO implements ImageDAO{
     }
 
     @Override
-    public List<Image> getImagesForOwner(String owner) {
+    public List<Image> getImagesForOwner(String owner, int maxItems, String startAfter) {
         return images.stream()
-                .filter(img -> img.getOwner().equals(owner))
+                .filter(img -> img.getOwner().equals(owner) && img.getName().compareTo(startAfter) > 0)
+                .limit(maxItems)
                 .toList();
     }
 
