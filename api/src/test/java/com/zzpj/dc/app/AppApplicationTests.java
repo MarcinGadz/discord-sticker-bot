@@ -245,8 +245,8 @@ public class AppApplicationTests {
                         timeUtils.getCurrentMilis() - 2 * DAY_IN_MILLIS - HOUR_IN_MILLIS
                 )
         );
-        Mockito.doReturn(testImages).when(imageDao).getImagesForOwner(owner);
+        Mockito.doReturn(testImages).when(imageDao).getImagesForOwner(owner, 1000, "");
 
-        assertEquals(imageService.getForOwner(owner, 1000, ""), testImages);
+        assertEquals(testImages, imageService.getForOwner(owner, 1000, ""));
     }
 }
