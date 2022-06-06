@@ -151,7 +151,7 @@ public class ImageS3DAO implements ImageDAO {
         ) {
             return getImageFromGetObjectResponse(response, key);
         } catch (NoSuchKeyException e) {
-            throw new ImageDoesntExistException("Image of given key doesn't exist");
+            throw new ImageDoesntExistException();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -174,7 +174,7 @@ public class ImageS3DAO implements ImageDAO {
                     .build()
             );
         } catch (NoSuchKeyException e) {
-            throw new ImageDoesntExistException("Image of given key doesn't exist");
+            throw new ImageDoesntExistException();
         }
     }
 }

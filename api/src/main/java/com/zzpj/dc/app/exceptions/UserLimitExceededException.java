@@ -1,10 +1,6 @@
 package com.zzpj.dc.app.exceptions;
 
-public class UserLimitExceededException extends RuntimeException {
+public class UserLimitExceededException extends Exception {
     public UserLimitExceededException() {
-    }
-
-    public UserLimitExceededException(String message) {
-        super(message);
     }
 }

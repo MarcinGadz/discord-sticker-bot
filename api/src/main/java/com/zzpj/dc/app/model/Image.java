@@ -1,10 +1,8 @@
 package com.zzpj.dc.app.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
-import java.util.Optional;
 
 @Getter
 @Setter

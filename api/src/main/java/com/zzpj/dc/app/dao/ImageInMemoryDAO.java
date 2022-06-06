@@ -39,14 +39,15 @@ public class ImageInMemoryDAO implements ImageDAO {
     }
 
     @Override
-    public Image getImageByName(String name, String owner) {
+    public Image getImageByName(String name, String owner) throws ImageDoesntExistException {
         return images.stream()
                 .filter(img -> img.getOwner().equals(owner) && img.getName().equals(name))
-                .findFirst().orElse(null);
+                .findAny()
+                .orElseThrow(ImageDoesntExistException::new);
     }
 
     @Override
-    public void removeImageByName(String name, String owner) {
-        images.removeIf(item -> item.getName().equals(name) && item.getOwner().equals(owner));
+    public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
+        images.remove(getImageByName(name, owner));
     }
 }

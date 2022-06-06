@@ -58,7 +58,8 @@ public class AppIntegrationTests {
     }
 
     @Test
-    public void addGetPhotoSuccessful() {
+    public void addGetRemovePhotoSuccessful() {
+        // add
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         String filename = "image.png";
@@ -74,7 +75,7 @@ public class AppIntegrationTests {
                 Object.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-
+        // get
         headers.setContentType(null);
 
         ResponseEntity<Image> res = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
@@ -85,6 +86,20 @@ public class AppIntegrationTests {
         assertNotNull(res.getBody());
         assertEquals(res.getBody().getOwner(), firstOwner);
         assertEquals(res.getBody().getName(), stickerName);
+
+        // remove
+        response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
+                HttpMethod.DELETE,
+                new HttpEntity<>(headers),
+                Object.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // verify removing
+        res = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Image.class);
+        assertEquals(HttpStatus.NOT_FOUND, res.getStatusCode());
     }
 
     @Test
@@ -267,5 +282,62 @@ public class AppIntegrationTests {
                 Image.class);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void addDuplicate() {
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        String duplicateOwner = "duplicate";
+        String filename = "image.png";
+        String stickerName = "image";
+        var file = new ClassPathResource(filename);
+        var map = new LinkedMultiValueMap<String, Object>();
+        map.add("image", file);
+
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + duplicateOwner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        response = restTemplate.exchange(basePath + duplicateOwner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
+
+    @Test
+    public void addEmptyFile() {
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        String stickerName = "image";
+        var map = new LinkedMultiValueMap<String, Object>();
+        map.add("image", null);
+
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+    @Test
+    public void addEmptyContentFile() {
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        String filename = "empty";
+        String stickerName = "image";
+        var map = new LinkedMultiValueMap<String, Object>();
+        map.add("image", filename);
+
+        HttpEntity<LinkedMultiValueMap<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<Object> response = restTemplate.exchange(basePath + firstOwner + "/" + stickerName,
+                HttpMethod.POST,
+                entity,
+                Object.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }
