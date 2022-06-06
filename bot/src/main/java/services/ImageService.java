@@ -6,7 +6,6 @@ import dto.ImageDto;
 import exceptions.BaseException;
 import exceptions.ExceptionFactory;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -83,7 +82,8 @@ public class ImageService {
             response.getEntity().writeTo(out);
 
             Gson gson = new Gson();
-            List<ImageDto> images = gson.fromJson(out.toString(), new TypeToken<ArrayList<ImageDto>>() {}.getType());
+            List<ImageDto> images = gson.fromJson(out.toString(), new TypeToken<ArrayList<ImageDto>>() {
+            }.getType());
             out.close();
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != 200) {
@@ -123,7 +123,7 @@ public class ImageService {
 
     public static void removeImage(String imageName, String userID) throws BaseException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpDelete request =  new HttpDelete(apiURL + userID + "/" + imageName);
+            HttpDelete request = new HttpDelete(apiURL + userID + "/" + imageName);
             request.setHeader("x-api-key", apiKey);
             CloseableHttpResponse response = httpClient.execute(request);
 

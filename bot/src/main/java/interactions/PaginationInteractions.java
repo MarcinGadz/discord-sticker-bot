@@ -14,7 +14,7 @@ import java.util.List;
 
 public class PaginationInteractions {
 
-    public static List<Button> getButtons (List<String> history,  boolean isLastPage) {
+    public static List<Button> getButtons(List<String> history, boolean isLastPage) {
         List<Button> buttons = new ArrayList<>();
 
         if (history.size() == 1) {
@@ -34,15 +34,14 @@ public class PaginationInteractions {
         return buttons;
     }
 
-    public static List<String> getHistory (ButtonInteractionEvent event) {
+    public static List<String> getHistory(ButtonInteractionEvent event) {
         ActionRow row = event.getMessage().getActionRows().get(0);
         String id = row.getButtons().get(1).getId();
         String sub = id.substring(id.indexOf('=') + 1);
         return new ArrayList<>(Arrays.asList(sub.split("/")));
     }
 
-    public static void getNextPage (ButtonInteractionEvent event) {
-        try {
+    public static void getNextPage(ButtonInteractionEvent event) throws BaseException {
             String userID = event.getUser().getId();
             List<String> history = PaginationInteractions.getHistory(event);
             List<ImageDto> images = ImageService.getImagesForUser(userID, history.get(history.size() - 1));
@@ -52,21 +51,18 @@ public class PaginationInteractions {
                 String newElement = images.get(images.size() - 1).getName();
                 history.add(newElement);
 
-                List<Button> buttons = PaginationInteractions.getButtons(history ,false);
+                List<Button> buttons = PaginationInteractions.getButtons(history, false);
                 event.getInteraction().editMessageEmbeds(embeds).setActionRow(buttons).queue();
             } catch (IndexOutOfBoundsException e) {
                 // If response is empty array (This was last page)
-                List<Button> buttons = PaginationInteractions.getButtons(history ,true);
+                List<Button> buttons = PaginationInteractions.getButtons(history, true);
                 List<MessageEmbed> currentEmbeds = event.getInteraction().getMessage().getEmbeds();
                 event.getInteraction().editMessageEmbeds(currentEmbeds).setActionRow(buttons).queue();
             }
-        } catch (BaseException e) {
-            event.reply("Something went wrong").queue();
-        }
     }
 
 
-    public static void getPreviousPage (ButtonInteractionEvent event) {
+    public static void getPreviousPage(ButtonInteractionEvent event) {
         try {
             String userID = event.getUser().getId();
             List<String> history = PaginationInteractions.getHistory(event);

@@ -3,7 +3,6 @@ package interactions;
 import dto.ImageDto;
 import exceptions.BaseException;
 import exceptions.ExceptionFactory;
-import exceptions.NoImagesFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -18,20 +17,16 @@ import java.util.Objects;
 public class ImageInteractions {
 
     public static void uploadImage(SlashCommandInteractionEvent event) throws BaseException {
-        try {
-            String userID = event.getUser().getId();
+        String userID = event.getUser().getId();
 
-            String imageName = Objects.requireNonNull(event.getOption("name")).getAsString();
-            String imageURL = Objects.requireNonNull(event.getOption("image")).getAsAttachment().getUrl();
+        String imageName = Objects.requireNonNull(event.getOption("name")).getAsString();
+        String imageURL = Objects.requireNonNull(event.getOption("image")).getAsAttachment().getUrl();
 
-            ImageService.uploadImage(imageURL, imageName, userID);
-            event.reply("Successfully uploaded sticker named: " + imageName).queue();
-        } catch (NullPointerException e) {
-            event.reply("Something went wrong").queue();
-        }
+        ImageService.uploadImage(imageURL, imageName, userID);
+        event.reply("Successfully uploaded sticker named: " + imageName).setEphemeral(true).queue();
     }
 
-    public static void listImages(SlashCommandInteractionEvent event) throws NoImagesFoundException {
+    public static void listImages(SlashCommandInteractionEvent event) throws BaseException {
         try {
             String userID = event.getUser().getId();
 
@@ -42,33 +37,25 @@ public class ImageInteractions {
             history.add(images.get(images.size() - 1).getName());
             List<Button> buttons = PaginationInteractions.getButtons(history, false);
 
-            event.replyEmbeds(embeds).addActionRow(buttons).setEphemeral(false).queue();
-        } catch (BaseException e) {
-            throw new RuntimeException(e);
+            event.replyEmbeds(embeds).addActionRow(buttons).setEphemeral(true).queue();
         } catch (IndexOutOfBoundsException e) {
             throw ExceptionFactory.noImagesFoundException();
         }
     }
 
-    public static void sendImage(SlashCommandInteractionEvent event) {
-        try {
-            String userID = event.getUser().getId();
+    public static void sendImage(SlashCommandInteractionEvent event) throws BaseException {
+        String userID = event.getUser().getId();
 
-            String stickerName = Objects.requireNonNull(event.getOption("name")).getAsString();
-            ImageDto image = ImageService.getImage(stickerName, userID);
-            event.reply(image.getUrl()).queue();
-        } catch (NullPointerException e) {
-            event.reply("Something went wrong").queue();
-        } catch (BaseException e) {
-            event.reply(e.getMessage()).queue();
-        }
+        String stickerName = Objects.requireNonNull(event.getOption("name")).getAsString();
+        ImageDto image = ImageService.getImage(stickerName, userID);
+        event.reply(image.getUrl()).queue();
     }
 
-    public static List<MessageEmbed> embedImages (List<ImageDto> images) throws BaseException {
+    public static List<MessageEmbed> embedImages(List<ImageDto> images) throws BaseException {
         List<MessageEmbed> embeds = new ArrayList<>();
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        for (ImageDto image: images) {
+        for (ImageDto image : images) {
             embedBuilder.setTitle(image.getName()).setColor(new Color(154, 0, 215));
             embedBuilder.setImage(image.getUrl());
             embeds.add(embedBuilder.build());
@@ -77,15 +64,11 @@ public class ImageInteractions {
         return embeds;
     }
 
-    public static void removeImage(SlashCommandInteractionEvent event) {
+    public static void removeImage(SlashCommandInteractionEvent event) throws BaseException {
         String userID = event.getUser().getId();
         String imageName = Objects.requireNonNull(event.getOption("name")).getAsString();
 
-        try {
-            ImageService.removeImage(imageName, userID);
-            event.reply("Successfully deleted " + imageName + " sticker!").queue();
-        } catch (BaseException e) {
-            event.reply(e.getMessage()).queue();
-        }
+        ImageService.removeImage(imageName, userID);
+        event.reply("Successfully deleted " + imageName + " sticker!").setEphemeral(true).queue();
     }
 }
