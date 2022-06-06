@@ -75,4 +75,15 @@ public class ImageInteractions {
         return embeds;
     }
 
+    public static void removeImage(SlashCommandInteractionEvent event) {
+        String userID = event.getUser().getId();
+        String imageName = Objects.requireNonNull(event.getOption("name")).getAsString();
+
+        try {
+            ImageService.removeImage(imageName, userID);
+            event.reply("Successfully deleted " + imageName + " sticker!").queue();
+        } catch (BaseException e) {
+            event.reply(e.getMessage()).queue();
+        }
+    }
 }

@@ -16,6 +16,7 @@ public class MessageListener extends ListenerAdapter {
             case "upload" -> ImageInteractions.uploadImage(event);
             case "list" -> ImageInteractions.listImages(event);
             case "send" -> ImageInteractions.sendImage(event);
+            case "remove" -> ImageInteractions.removeImage(event);
         }
     }
 

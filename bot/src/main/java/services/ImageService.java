@@ -6,6 +6,7 @@ import dto.ImageDto;
 import exceptions.BaseException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -105,6 +106,26 @@ public class ImageService {
             return image;
         } catch (IOException e) {
             throw new BaseException("Couldn't get the image");
+        }
+    }
+
+    public static void removeImage(String imageName, String userID) throws BaseException {
+        System.out.println(imageName + " " + userID);
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpDelete request =  new HttpDelete(apiURL + userID + "/" + imageName);
+            request.setHeader("x-api-key", apiKey);
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == 404) {
+                throw new BaseException("Couldn't find sticker with this name");
+            } else if (statusCode != 200) {
+                throw new BaseException("Unexpected error");
+            }
+
+            response.close();
+        } catch (IOException e) {
+            throw new BaseException("Something went wrong!");
         }
     }
 }
