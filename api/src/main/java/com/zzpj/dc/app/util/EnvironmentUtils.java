@@ -1,6 +1,8 @@
 package com.zzpj.dc.app.util;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class EnvironmentUtils {
     @Value("${app.limit.user.add-per-hour}")
     private Integer userAddPerHourLimit;

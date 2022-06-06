@@ -1,5 +1,6 @@
 package com.zzpj.dc.app.dao;
 
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.model.Image;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @Component(value = "ImageInMemoryDAO")
 @Profile("LOCAL")
-public class ImageInMemoryDAO implements ImageDAO{
+public class ImageInMemoryDAO implements ImageDAO {
     private List<Image> images = new ArrayList<>();
 
     @PostConstruct
@@ -42,5 +43,10 @@ public class ImageInMemoryDAO implements ImageDAO{
         return images.stream()
                 .filter(img -> img.getOwner().equals(owner) && img.getName().equals(name))
                 .findFirst().orElse(null);
+    }
+
+    @Override
+    public void removeImageByName(String name, String owner) {
+        images.removeIf(item -> item.getName().equals(name) && item.getOwner().equals(owner));
     }
 }
