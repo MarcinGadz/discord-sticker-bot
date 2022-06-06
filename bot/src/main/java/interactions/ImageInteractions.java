@@ -21,7 +21,7 @@ public class ImageInteractions {
             String imageName = Objects.requireNonNull(event.getOption("name")).getAsString();
             String imageURL = Objects.requireNonNull(event.getOption("image")).getAsAttachment().getUrl();
 
-            ImageService.uploadSticker(imageURL, imageName, userID);
+            ImageService.uploadImage(imageURL, imageName, userID);
             event.reply("Successfully uploaded sticker named: " + imageName).queue();
         } catch (NullPointerException e) {
             event.reply("Something went wrong").queue();
@@ -34,7 +34,7 @@ public class ImageInteractions {
         try {
             String userID = event.getUser().getId();
 
-            List<ImageDto> images = ImageService.getStickersForUser(userID);
+            List<ImageDto> images = ImageService.getImagesForUser(userID);
             List<MessageEmbed> embeds = ImageInteractions.embedImages(images);
             PaginationInteractions.listPaginated(embeds, event);
         } catch (BaseException e) {
@@ -47,7 +47,7 @@ public class ImageInteractions {
             String userID = event.getUser().getId();
 
             String stickerName = Objects.requireNonNull(event.getOption("name")).getAsString();
-            ImageDto image = ImageService.getSticker(stickerName, userID);
+            ImageDto image = ImageService.getImage(stickerName, userID);
             event.reply(image.getUrl()).queue();
         } catch (NullPointerException e) {
             event.reply("Something went wrong").queue();

@@ -24,12 +24,12 @@ public class ImageService {
     private static final String apiURL = "http://localhost:8080/image/";
     private static final String apiKey = "13cf17e6-0929-475b-bad0-1b7ab1bdca80";
 
-    public static void uploadSticker(String imageURL, String stickerName, String userID) throws BaseException {
+    public static void uploadImage(String imageURL, String imageName, String userID) throws BaseException {
         byte[] imageData;
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet getImageDataRequest = new HttpGet(imageURL);
-            CloseableHttpResponse response = httpClient.execute(getImageDataRequest);
+            HttpGet request = new HttpGet(imageURL);
+            CloseableHttpResponse response = httpClient.execute(request);
             HttpEntity entity = response.getEntity();
             imageData = EntityUtils.toByteArray(entity);
         } catch (Exception e) {
@@ -39,13 +39,13 @@ public class ImageService {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             MultipartEntityBuilder mpBuilder = MultipartEntityBuilder.create();
             mpBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-            mpBuilder.addBinaryBody("image", imageData, ContentType.DEFAULT_BINARY, stickerName);
+            mpBuilder.addBinaryBody("image", imageData, ContentType.DEFAULT_BINARY, imageName);
 
-            HttpPost uploadRequest = new HttpPost(apiURL + userID);
-            uploadRequest.setEntity(mpBuilder.build());
-            uploadRequest.setHeader("x-api-key", apiKey);
+            HttpPost request = new HttpPost(apiURL + userID + "/" + imageName);
+            request.setEntity(mpBuilder.build());
+            request.setHeader("x-api-key", apiKey);
 
-            CloseableHttpResponse res = httpClient.execute(uploadRequest);
+            CloseableHttpResponse res = httpClient.execute(request);
             if (res.getStatusLine().getStatusCode() != 200) {
                 // TODO: obsługa wyjątków
                 throw new BaseException("Couldn't upload");
@@ -57,7 +57,7 @@ public class ImageService {
         }
     }
 
-    public static List<ImageDto> getStickersForUser(String userID) throws BaseException {
+    public static List<ImageDto> getImagesForUser(String userID) throws BaseException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet request = new HttpGet(apiURL + userID);
             request.setHeader("x-api-key", apiKey);
@@ -77,9 +77,9 @@ public class ImageService {
         }
     }
 
-    public static ImageDto getSticker(String stickerName, String userID) throws BaseException {
+    public static ImageDto getImage(String imageName, String userID) throws BaseException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet(apiURL + userID + "/" + stickerName);
+            HttpGet request = new HttpGet(apiURL + userID + "/" + imageName);
             request.setHeader("x-api-key", apiKey);
             CloseableHttpResponse response = httpClient.execute(request);
 
