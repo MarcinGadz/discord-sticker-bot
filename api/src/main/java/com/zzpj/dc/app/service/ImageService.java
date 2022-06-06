@@ -1,10 +1,7 @@
 package com.zzpj.dc.app.service;
 
 import com.zzpj.dc.app.dao.ImageDAO;
-import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
-import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
-import com.zzpj.dc.app.exceptions.UserLimitExceededException;
-import com.zzpj.dc.app.exceptions.WrongFileTypeException;
+import com.zzpj.dc.app.exceptions.*;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.util.EnvironmentUtils;
 import com.zzpj.dc.app.util.TimeUtils;
@@ -51,9 +48,12 @@ public class ImageService {
      * @param image Image to be saved
      * @param owner User who is uploading image
      */
-    public void addImage(MultipartFile image, String imageName, String owner) throws IOException, ImageContentEmptyException {
+    public void addImage(MultipartFile image, String imageName, String owner) throws IOException, ImageContentEmptyException, ImageAlreadyExistsException, UserLimitExceededException, WrongFileTypeException {
         Long currentTime = timeUtils.getCurrentMilis();
         LocalDate currentDay = timeUtils.getCurrentDay();
+        if (image == null) {
+            throw new ImageContentEmptyException();
+        }
         Image img = new Image(
                 imageName,
                 null,
@@ -70,7 +70,12 @@ public class ImageService {
         if (!isPNG(img)) {
             throw new WrongFileTypeException();
         }
-        imageDAO.addImage(img);
+        try {
+            getImageByName(imageName, owner);
+            throw new ImageAlreadyExistsException();
+        } catch (ImageDoesntExistException ex) {
+            imageDAO.addImage(img);
+        }
     }
 
     /**
@@ -158,10 +163,10 @@ public class ImageService {
     }
 
     /**
-     * Removes image of given object-name from S3
+     * Removes image of given object-name from DAO
      * @param name name of the image to be removed
      * @param owner owner of the image to be removed
-     * @throws ImageDoesntExistException image of this name/owner was not found in S3
+     * @throws ImageDoesntExistException image of this name/owner was not found in DAO
      */
     public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
         imageDAO.removeImageByName(name, owner);

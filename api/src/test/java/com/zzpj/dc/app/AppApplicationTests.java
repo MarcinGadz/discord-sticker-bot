@@ -1,10 +1,7 @@
 package com.zzpj.dc.app;
 
 import com.zzpj.dc.app.dao.ImageDAO;
-import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
-import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
-import com.zzpj.dc.app.exceptions.UserLimitExceededException;
-import com.zzpj.dc.app.exceptions.WrongFileTypeException;
+import com.zzpj.dc.app.exceptions.*;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
 import com.zzpj.dc.app.util.EnvironmentUtils;
@@ -23,6 +20,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,16 +44,12 @@ public class AppApplicationTests {
             ));
         }
 
-        @Bean
-        public TimeUtils timeUtils() {
-            return new TimeUtils();
-        }
     }
 
     @Autowired
     private ImageService imageService;
 
-    @Autowired
+    @MockBean
     private TimeUtils timeUtils;
 
     @MockBean
@@ -111,11 +105,15 @@ public class AppApplicationTests {
                 }
         );
         Mockito.doNothing().when(imageDao).addImage(Mockito.any());
+        Mockito.doReturn(System.currentTimeMillis()).when(timeUtils).getCurrentMilis();
+        Mockito.doReturn(LocalDate.now()).when(timeUtils).getCurrentDay();
     }
 
 
     @Test
-    public void whenUploadingCorrectImage_proceedWithoutError() throws ImageContentEmptyException, IOException {
+    public void whenUploadingCorrectImage_proceedWithoutError() throws ImageContentEmptyException, IOException, ImageAlreadyExistsException, UserLimitExceededException, WrongFileTypeException, ImageDoesntExistException {
+        Mockito.doThrow(new ImageDoesntExistException())
+                        .when(imageDao).getImageByName(FILENAME, TEST_OWNER);
         imageService.addImage(INIT_DATA.get(0), FILENAME, TEST_OWNER);
     }
 
@@ -137,19 +135,24 @@ public class AppApplicationTests {
 
     @Test
     public void whenWithinAccountRateLimits_proceedWithoutError()
-            throws IOException, ImageContentEmptyException {
+            throws IOException, ImageContentEmptyException, ImageAlreadyExistsException, UserLimitExceededException, WrongFileTypeException, ImageDoesntExistException {
+        String first_correct_limits = "first_correct_limits";
+        String second_correct_limits = "second_correct_limits";
         Mockito.doReturn(
                 Arrays.asList(
                         getTestImage(
-                                "first_correct_limits",
+                                first_correct_limits,
                                 timeUtils.getCurrentMilis() - HOUR_IN_MILLIS
                         ),
                         getTestImage(
-                                "second_correct_limits",
+                                second_correct_limits,
                                 timeUtils.getCurrentMilis() - DAY_IN_MILLIS
                         )
                 )
         ).when(imageDao).getImagesForOwner(TEST_OWNER);
+
+        Mockito.doThrow(new ImageDoesntExistException()).when(
+                imageDao).getImageByName(FILENAME, TEST_OWNER);
 
         imageService.addImage(INIT_DATA.get(0), FILENAME, TEST_OWNER);
     }
@@ -157,7 +160,7 @@ public class AppApplicationTests {
     @Test
     public void whenTotalAccountHourlyLimitExceeded_throwUserLimitExceededException() {
         Mockito.doReturn(
-                Arrays.asList(
+                List.of(
                         getTestImage(
                                 "hourly_exceed",
                                 timeUtils.getCurrentMilis()
@@ -172,7 +175,9 @@ public class AppApplicationTests {
     }
 
     @Test
-    public void whenTotalAccountDailyLimitExceeded_throwUserLimitExceededException() {
+    public void whenTotalAccountDailyLimitExceeded_throwUserLimitExceededException() throws ImageDoesntExistException {
+        Mockito.doReturn(5*HOUR_IN_MILLIS).when(timeUtils).getCurrentMilis();
+        Mockito.doReturn(LocalDate.ofEpochDay(0)).when(timeUtils).getCurrentDay();
         Mockito.doReturn(
                 Arrays.asList(
                         getTestImage(
@@ -185,7 +190,8 @@ public class AppApplicationTests {
                         )
                 )
         ).when(imageDao).getImagesForOwner(TEST_OWNER);
-
+        Mockito.doThrow(new ImageDoesntExistException())
+                        .when(imageDao).getImageByName(FILENAME, TEST_OWNER);
         assertThrows(
                 UserLimitExceededException.class,
                 () -> imageService.addImage(INIT_DATA.get(0), FILENAME, TEST_OWNER)

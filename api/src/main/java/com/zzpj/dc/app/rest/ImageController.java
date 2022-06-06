@@ -1,22 +1,16 @@
 package com.zzpj.dc.app.rest;
 
-import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
-import com.zzpj.dc.app.exceptions.ImageNotFoundException;
-import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
+import com.zzpj.dc.app.exceptions.*;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
-import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * REST Controller used to manipulate images
@@ -43,7 +37,7 @@ public class ImageController {
             @PathVariable("userId") @NonNull String owner,
             @PathVariable("imageName") @NonNull String imageName,
             @RequestBody @NonNull MultipartFile image
-    ) throws IOException, ImageContentEmptyException {
+    ) throws IOException, ImageContentEmptyException, ImageAlreadyExistsException, UserLimitExceededException, WrongFileTypeException {
         imageService.addImage(image, imageName, owner);
     }
 
@@ -52,8 +46,7 @@ public class ImageController {
             @PathVariable("name") @NonNull String photoName,
             @PathVariable("userId") @NonNull String userId
     ) throws ImageDoesntExistException {
-        Image imageByName = imageService.getImageByName(photoName, userId);
-        return Optional.ofNullable(imageByName).orElseThrow(ImageNotFoundException::new);
+        return imageService.getImageByName(photoName, userId);
     }
 
     @GetMapping("/{userId}")
@@ -69,15 +62,7 @@ public class ImageController {
     public void deletePhoto(
             @PathVariable("name") @NonNull String photoName,
             @PathVariable("userId") @NonNull String userId
-    ) {
-        try {
+    ) throws ImageDoesntExistException {
             imageService.removeImageByName(photoName, userId);
-        } catch (ImageDoesntExistException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "User with ID " + userId + " doesn't have image " + userId,
-                    e
-            );
-        }
     }
 }
