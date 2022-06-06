@@ -2,14 +2,17 @@ package com.zzpj.dc.app.rest;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
 import com.zzpj.dc.app.exceptions.ImageNotFoundException;
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.model.Image;
 import com.zzpj.dc.app.service.ImageService;
 import lombok.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,7 +51,7 @@ public class ImageController {
     public Image getPhoto(
             @PathVariable("name") @NonNull String photoName,
             @PathVariable("userId") @NonNull String userId
-    ) {
+    ) throws ImageDoesntExistException {
         Image imageByName = imageService.getImageByName(photoName, userId);
         return Optional.ofNullable(imageByName).orElseThrow(ImageNotFoundException::new);
     }
@@ -60,5 +63,21 @@ public class ImageController {
             @RequestParam(defaultValue = "") String startAfter
     ) {
         return imageService.getForOwner(userId, maxItems, startAfter);
+    }
+
+    @DeleteMapping("/{userId}/{name}")
+    public void deletePhoto(
+            @PathVariable("name") @NonNull String photoName,
+            @PathVariable("userId") @NonNull String userId
+    ) {
+        try {
+            imageService.removeImageByName(photoName, userId);
+        } catch (ImageDoesntExistException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "User with ID " + userId + " doesn't have image " + userId,
+                    e
+            );
+        }
     }
 }

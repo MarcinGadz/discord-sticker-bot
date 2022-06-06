@@ -2,6 +2,7 @@ package com.zzpj.dc.app;
 
 import com.zzpj.dc.app.dao.ImageDAO;
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import com.zzpj.dc.app.model.Image;
@@ -217,7 +218,7 @@ public class AppApplicationTests {
     }
 
     @Test
-    public void whenGettingImageByName_returnImagesOfGivenName() {
+    public void whenGettingImageByName_returnImagesOfGivenName() throws ImageDoesntExistException {
         String owner = "some_owner";
         String name = "name";
         Image testImage = getTestImage(

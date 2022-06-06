@@ -1,6 +1,7 @@
 package com.zzpj.dc.app.dao;
 
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.model.Image;
 
 import java.util.List;
@@ -11,5 +12,6 @@ public interface ImageDAO {
     default List<Image> getImagesForOwner(String owner) {
         return getImagesForOwner(owner, Integer.MAX_VALUE, "");
     }
-    Image getImageByName(String name, String owner);
+    Image getImageByName(String name, String owner) throws ImageDoesntExistException;
+    void removeImageByName(String name, String owner) throws ImageDoesntExistException;
 }

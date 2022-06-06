@@ -2,6 +2,7 @@ package com.zzpj.dc.app.service;
 
 import com.zzpj.dc.app.dao.ImageDAO;
 import com.zzpj.dc.app.exceptions.ImageContentEmptyException;
+import com.zzpj.dc.app.exceptions.ImageDoesntExistException;
 import com.zzpj.dc.app.exceptions.UserLimitExceededException;
 import com.zzpj.dc.app.exceptions.WrongFileTypeException;
 import com.zzpj.dc.app.model.Image;
@@ -119,7 +120,7 @@ public class ImageService {
      * @param userId owner of image
      * @return found image or null
      */
-    public Image getImageByName(String name, String userId) {
+    public Image getImageByName(String name, String userId) throws ImageDoesntExistException {
         return imageDAO.getImageByName(name, userId);
     }
 
@@ -154,5 +155,15 @@ public class ImageService {
             }
         }
         return true;
+    }
+
+    /**
+     * Removes image of given object-name from S3
+     * @param name name of the image to be removed
+     * @param owner owner of the image to be removed
+     * @throws ImageDoesntExistException image of this name/owner was not found in S3
+     */
+    public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
+        imageDAO.removeImageByName(name, owner);
     }
 }
