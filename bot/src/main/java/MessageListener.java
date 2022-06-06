@@ -1,4 +1,5 @@
 
+import exceptions.BaseException;
 import interactions.ImageInteractions;
 import interactions.PaginationInteractions;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -12,12 +13,18 @@ public class MessageListener extends ListenerAdapter {
         super.onSlashCommandInteraction(event);
         String commandName = event.getName();
 
-        switch (commandName) {
-            case "upload" -> ImageInteractions.uploadImage(event);
-            case "list" -> ImageInteractions.listImages(event);
-            case "send" -> ImageInteractions.sendImage(event);
-            case "remove" -> ImageInteractions.removeImage(event);
+        try {
+            switch (commandName) {
+                case "upload" -> ImageInteractions.uploadImage(event);
+                case "list" -> ImageInteractions.listImages(event);
+                case "send" -> ImageInteractions.sendImage(event);
+                case "remove" -> ImageInteractions.removeImage(event);
+            }
+        } catch (BaseException exception) {
+            event.reply(exception.getMessage()).queue();
         }
+
+
     }
 
     @Override

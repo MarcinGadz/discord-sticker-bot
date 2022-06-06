@@ -15,7 +15,7 @@ import java.util.Objects;
 
 public class ImageInteractions {
 
-    public static void uploadImage(SlashCommandInteractionEvent event) {
+    public static void uploadImage(SlashCommandInteractionEvent event) throws BaseException {
         try {
             String userID = event.getUser().getId();
 
@@ -26,8 +26,6 @@ public class ImageInteractions {
             event.reply("Successfully uploaded sticker named: " + imageName).queue();
         } catch (NullPointerException e) {
             event.reply("Something went wrong").queue();
-        } catch (BaseException e) {
-            event.reply(e.getMessage()).queue();
         }
     }
 
