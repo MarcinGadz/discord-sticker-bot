@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dto.ImageDto;
 import exceptions.BaseException;
+import exceptions.ExceptionFactory;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -20,6 +22,7 @@ import org.apache.http.util.EntityUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +38,8 @@ public class ImageService {
             CloseableHttpResponse response = httpClient.execute(request);
             HttpEntity entity = response.getEntity();
             imageData = EntityUtils.toByteArray(entity);
-        } catch (Exception e) {
-            throw new BaseException("Couldn't get image");
+        } catch (IOException e) {
+            throw ExceptionFactory.couldntDownloadImage();
         }
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
@@ -49,13 +52,18 @@ public class ImageService {
             request.setHeader("x-api-key", apiKey);
 
             CloseableHttpResponse res = httpClient.execute(request);
-            if (res.getStatusLine().getStatusCode() != 200) {
-                throw new BaseException("Couldn't upload");
-            }
 
+            int statusCode = res.getStatusLine().getStatusCode();
+            if (statusCode == 400) {
+                throw ExceptionFactory.wrongFileTypeException();
+            } else if (statusCode == 429) {
+                throw ExceptionFactory.userLimitExceededException();
+            } else if (statusCode != 200) {
+                throw ExceptionFactory.unexpectedException();
+            }
             res.close();
         } catch (IOException e) {
-            throw new BaseException("Couldn't upload the image");
+            throw ExceptionFactory.unexpectedException();
         }
     }
 
@@ -77,11 +85,15 @@ public class ImageService {
             Gson gson = new Gson();
             List<ImageDto> images = gson.fromJson(out.toString(), new TypeToken<ArrayList<ImageDto>>() {}.getType());
             out.close();
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 200) {
+                throw ExceptionFactory.unexpectedException();
+            }
             response.close();
 
             return images;
-        } catch (Exception e) {
-            throw new BaseException("Couldn't get requested list");
+        } catch (URISyntaxException | IOException e) {
+            throw ExceptionFactory.unexpectedException();
         }
     }
 
@@ -92,7 +104,7 @@ public class ImageService {
             CloseableHttpResponse response = httpClient.execute(request);
 
             if (response.getStatusLine().getStatusCode() != 200) {
-                throw new BaseException("Couldn't find sticker with this name");
+                throw ExceptionFactory.imageNotFoundException();
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -105,12 +117,11 @@ public class ImageService {
 
             return image;
         } catch (IOException e) {
-            throw new BaseException("Couldn't get the image");
+            throw ExceptionFactory.unexpectedException();
         }
     }
 
     public static void removeImage(String imageName, String userID) throws BaseException {
-        System.out.println(imageName + " " + userID);
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpDelete request =  new HttpDelete(apiURL + userID + "/" + imageName);
             request.setHeader("x-api-key", apiKey);
@@ -118,14 +129,14 @@ public class ImageService {
 
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == 404) {
-                throw new BaseException("Couldn't find sticker with this name");
+                throw ExceptionFactory.imageNotFoundException();
             } else if (statusCode != 200) {
-                throw new BaseException("Unexpected error");
+                throw ExceptionFactory.unexpectedException();
             }
 
             response.close();
         } catch (IOException e) {
-            throw new BaseException("Something went wrong!");
+            throw ExceptionFactory.unexpectedException();
         }
     }
 }

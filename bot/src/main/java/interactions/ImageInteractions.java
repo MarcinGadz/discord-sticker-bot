@@ -2,6 +2,8 @@ package interactions;
 
 import dto.ImageDto;
 import exceptions.BaseException;
+import exceptions.ExceptionFactory;
+import exceptions.NoImagesFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -29,7 +31,7 @@ public class ImageInteractions {
         }
     }
 
-    public static void listImages(SlashCommandInteractionEvent event) {
+    public static void listImages(SlashCommandInteractionEvent event) throws NoImagesFoundException {
         try {
             String userID = event.getUser().getId();
 
@@ -43,6 +45,8 @@ public class ImageInteractions {
             event.replyEmbeds(embeds).addActionRow(buttons).setEphemeral(false).queue();
         } catch (BaseException e) {
             throw new RuntimeException(e);
+        } catch (IndexOutOfBoundsException e) {
+            throw ExceptionFactory.noImagesFoundException();
         }
     }
 

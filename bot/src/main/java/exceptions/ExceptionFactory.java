@@ -18,4 +18,12 @@ public class ExceptionFactory {
         return new UnexpectedException(ExceptionMessages.UNEXPECTED);
     }
 
+    public static CouldntDownloadImage couldntDownloadImage() {
+        return new CouldntDownloadImage(ExceptionMessages.COULDNT_DOWNLOAD_IMAGE);
+    }
+
+    public static NoImagesFoundException noImagesFoundException() {
+        return new NoImagesFoundException(ExceptionMessages.NO_IMAGES_FOUND);
+    }
+
 }
