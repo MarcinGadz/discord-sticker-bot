@@ -1,16 +1,18 @@
-package commands;
+package interactions;
 
 import dto.ImageDto;
 import exceptions.BaseException;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import services.ImageService;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ImageCommands {
+public class ImageInteractions {
 
     public static void uploadImage(SlashCommandInteractionEvent event) {
         try {
@@ -32,21 +34,11 @@ public class ImageCommands {
         try {
             String userID = event.getUser().getId();
 
-            List<ImageDto> images =  ImageService.getStickersForUser(userID);
-            StringBuilder content = new StringBuilder();
-            for (ImageDto image : images) {
-                content.append(image.getName()).append("\n");
-                System.out.println(image.getName());
-            }
-
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setTitle("Your stickers:");
-            eb.setColor(new Color(15, 150, 210));
-            eb.setDescription(content);
-
-            event.replyEmbeds(eb.build()).queue();
+            List<ImageDto> images = ImageService.getStickersForUser(userID);
+            List<MessageEmbed> embeds = ImageInteractions.embedImages(images);
+            PaginationInteractions.listPaginated(embeds, event);
         } catch (BaseException e) {
-            event.reply(e.getMessage()).queue();
+            throw new RuntimeException(e);
         }
     }
 
@@ -62,6 +54,19 @@ public class ImageCommands {
         } catch (BaseException e) {
             event.reply(e.getMessage()).queue();
         }
+    }
+
+    public static List<MessageEmbed> embedImages (List<ImageDto> images) throws BaseException {
+        List<MessageEmbed> embeds = new ArrayList<>();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+
+        for (ImageDto image: images) {
+            embedBuilder.setTitle(image.getName()).setColor(new Color(154, 0, 215));
+            embedBuilder.setImage(image.getUrl());
+            embeds.add(embedBuilder.build());
+        }
+
+        return embeds;
     }
 
 }
