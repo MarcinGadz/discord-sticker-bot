@@ -10,3 +10,12 @@ Simple discord bot made from two parts:
     
     To locally run tests of API (both integrational and unit) use `mvn test` command.
     Both commands are supposed to be run from API root directory (`/api` in this repo)
+
+  - public Discord bot service: Used to manage communication between users and API. 
+  Users can call slash commands to manage their collection of stickers. These can have some required arguments with diffirent types.
+    - `/upload` - adds new sticker to authorized user (takes image file with PNG extension and sticker name as arguments)
+    - `/list` - shows list of user's stickers using paginated list (users can change pages using buttons)
+    - `/remove` - removes specified by name sticker
+    - `/send` - sends URL to specified sticker on the AWS S3 Object Storage which is interpreted by Discord application as an image
+  Depending on command responses can be visible to everyone on the channel where command was executed (`/send`) or just to the user that called this command.
+With this awesome bot you can have all your stickers in one place! 😀
