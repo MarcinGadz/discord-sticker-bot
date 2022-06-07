@@ -9,6 +9,7 @@ import com.zzpj.dc.app.util.TimeUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -255,5 +257,24 @@ public class AppApplicationTests {
         Mockito.doReturn(testImages).when(imageDao).getImagesForOwner(owner, 1000, "");
 
         assertEquals(testImages, imageService.getForOwner(owner, 1000, ""));
+    }
+
+    @Test
+    public void whenRemovingExistingPhoto_proceedWithoutError() throws ImageDoesntExistException {
+        Mockito.doNothing().when(imageDao).removeImageByName(Mockito.anyString(), Mockito.anyString());
+
+        imageService.removeImageByName("some-file-to-remove", TEST_OWNER);
+    }
+
+    @Test
+    public void whenRemovingNonExistentImage_throwImageDoesntExistException() throws ImageDoesntExistException {
+        Mockito.doThrow(ImageDoesntExistException.class)
+                .when(imageDao)
+                .removeImageByName(Mockito.anyString(), Mockito.anyString());
+
+        assertThrows(
+                ImageDoesntExistException.class,
+                () -> imageService.removeImageByName("some-file-to-remove", TEST_OWNER)
+        );
     }
 }
