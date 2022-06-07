@@ -53,7 +53,7 @@ public class ImageS3DAO implements ImageDAO {
         byte[] imageContent = image.getContent();
         s3.putObject(PutObjectRequest.builder()
                 .bucket(bucketName)
-                .key(image.getOwner() + "/" + image.getName())
+                .key(image.getOwner() + "/" + image.getName() + ".png")
                 .contentType("x-png")
                 .contentLength((long) imageContent.length)
                 .build(),
@@ -73,7 +73,7 @@ public class ImageS3DAO implements ImageDAO {
                 .bucket(bucketName)
                 .prefix(owner + "/")
                 .maxKeys(maxItems)
-                .startAfter(owner + "/" + startAfter)
+                .startAfter(owner + "/" + startAfter + ".png")
                 .build())
                 .contents()
                 .stream()
@@ -83,7 +83,7 @@ public class ImageS3DAO implements ImageDAO {
                     String filename = keySplit[1];
 
                     return new Image(
-                            filename,
+                            filename.replace(".png", ""),
                             getObjectUrl(object),
                             null,
                             user,
@@ -100,12 +100,14 @@ public class ImageS3DAO implements ImageDAO {
      * @return URL to the object
      */
     private String getObjectUrl(String key) {
-        return s3.utilities().getUrl(GetUrlRequest.builder()
+        String httpsUrl = s3.utilities().getUrl(GetUrlRequest.builder()
             .bucket(bucketName)
             .region(awsRegion)
             .key(key)
             .build())
             .toString();
+
+        return httpsUrl.replaceAll("https", "http");
     }
 
     private String getObjectUrl(S3Object object) {
@@ -142,7 +144,7 @@ public class ImageS3DAO implements ImageDAO {
      */
     @Override
     public Image getImageByName(String name, String owner) throws ImageDoesntExistException {
-        String key = owner + "/" + name;
+        String key = owner + "/" + name + ".png";
         try (
             ResponseInputStream<GetObjectResponse> response = s3.getObject(GetObjectRequest.builder()
                 .bucket(bucketName)
@@ -166,7 +168,7 @@ public class ImageS3DAO implements ImageDAO {
      */
     @Override
     public void removeImageByName(String name, String owner) throws ImageDoesntExistException {
-        String key = owner + "/" + name;
+        String key = owner + "/" + name + ".png";
         try {
             s3.deleteObject(DeleteObjectRequest.builder()
                     .bucket(bucketName)
