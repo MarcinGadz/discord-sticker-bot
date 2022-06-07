@@ -171,8 +171,8 @@ public class AppIntegrationTests {
         when(mock.getCurrentDay()).thenReturn(LocalDate.ofEpochDay(0));
 
         int i;
+        when(mock.getCurrentMilis()).thenReturn(200L);
         for (i = 0; i < hourlyLimit; i++) {
-            when(mock.getCurrentMilis()).thenReturn(200L * i);
             String stickerName = MessageFormat.format("image-{0}", i);
             ResponseEntity<Object> response = restTemplate.exchange(basePath + yetAnotherOwner + "/" + stickerName,
                     HttpMethod.POST,
@@ -181,8 +181,8 @@ public class AppIntegrationTests {
             assertEquals(HttpStatus.OK, response.getStatusCode());
         }
 
+        when(mock.getCurrentMilis()).thenReturn(200L + 3600*1000);
         for (; i < dailyLimit; i++) {
-            when(mock.getCurrentMilis()).thenReturn(200L * i + 7200*1000);
             String stickerName = MessageFormat.format("image-{0}", i);
 
             ResponseEntity<Object> response = restTemplate.exchange(basePath + yetAnotherOwner + "/" + stickerName,
