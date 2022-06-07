@@ -18,4 +18,5 @@ Simple discord bot made from two parts:
     - `/remove` - removes specified by name sticker
     - `/send` - sends URL to specified sticker on the AWS S3 Object Storage which is interpreted by Discord application as an image
   Depending on command responses can be visible to everyone on the channel where command was executed (`/send`) or just to the user that called this command.
+
 With this awesome bot you can have all your stickers in one place! 😀
