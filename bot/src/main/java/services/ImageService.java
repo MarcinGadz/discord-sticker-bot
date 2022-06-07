@@ -5,6 +5,8 @@ import com.google.gson.reflect.TypeToken;
 import dto.ImageDto;
 import exceptions.BaseException;
 import exceptions.ExceptionFactory;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -19,15 +21,29 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class ImageService {
-    private static final String apiURL = "http://localhost:8080/image/";
-    private static final String apiKey = "13cf17e6-0929-475b-bad0-1b7ab1bdca80";
+    private static final String apiURL;
+    private static final String apiKey;
+
+    static {
+        String rootPath = System.getProperty("user.dir");
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream(rootPath + "/app.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        apiKey = properties.getProperty("API_KEY");
+        apiURL = properties.getProperty("API_URL");
+    }
 
     public static void uploadImage(String imageURL, String imageName, String userID) throws BaseException {
         byte[] imageData;
