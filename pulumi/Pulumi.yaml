@@ -1,0 +1,6 @@
+name: zzpj
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: Program użyty do wdrożenia bota do naklejek discord na przedmiot zzpj
